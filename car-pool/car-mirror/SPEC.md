@@ -363,7 +363,7 @@ If the size $m$ of the filter is $d$ powers of two ($2^d$), take the lowest (rig
 
 A Bloom filter MAY be a length that is not a power of two. This is NOT RECOMMENDED since it incurs [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling) overhead.
 
-This case uses the nearest rounded power of two as in [3.4.1.1](#3411-power-of-two). If the sampled number is less than $m$, then use it MUST be used as the index. If the number is larger, then the right shift the unmasked number, take the required number of bits (e.g. via AND-mask) and check again. Repeat this process until the number of digits is exhausted.
+This case uses the nearest rounded power of two as in [3.4.1.1](#3411-power-of-two). If the sampled number is less than $m$, then it MUST be used as the index. If the number is larger, then right shift the unmasked number, take the required number of bits (e.g. via AND-mask) and check again. Repeat this process until the number of digits is exhausted.
 
 If none of the samples succeeds, a new hash MUST be generated and this process begun again. Hash generation MUST be performed via [XXH3](https://cyan4973.github.io/xxHash/) with the rehashing generation used as a seed (a simple counter).
 
