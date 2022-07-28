@@ -351,7 +351,7 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ### 3.4.1 Indexing
 
-Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^8^p$)
+Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^{8^{p}}$)
 
 #### Clean $256^p$
 
