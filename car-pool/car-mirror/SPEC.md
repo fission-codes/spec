@@ -412,7 +412,7 @@ If a local store is on the order of 100,000s of blocks, then the entire store ca
 
 In many cases -- importantly during cold calls -- a peer MAY not have enough information to fill a Bloom filter with relevant CIDs, or enough CIDs to fill out some minimum filter size (e.g. 1KB). In this case, it is RECOMMENDED that the Bloom be filled with random CIDs from the local store. While this may seem counterintuitive, this has the potential to reduce round trips in cases where the DAG being mirrored is deep rather than wide.
 
-Since the false positive probability is an order of magnitude lower than the number of elements, this means that a path will typically be incorrectly omitted on the order of 1/1M or lower probability for a single round. The overall strategy of CAR Mirror is to do the best possible with limited information. Given that the pathological case where we have no matches other than the roots in a round (i.e. the lower bound for performance) looks similar like Bitswap, this tradeoff is generally biased towards attempting deduplciation with random CIDs.
+Since the false positive probability is an order of magnitude lower than the number of elements, this means that a path will typically be incorrectly omitted on the order of 1/1M or lower probability for a single round. The overall strategy of CAR Mirror is to do the best possible with limited information. Given that the pathological case where we have no matches other than the roots in a round (i.e. the lower bound for performance) looks similar like Bitswap, this tradeoff is generally biased towards attempting deduplication with random CIDs.
 
 ### 3.5.3 Mutable Pointer
 
