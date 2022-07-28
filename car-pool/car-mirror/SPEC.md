@@ -351,13 +351,13 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ### 3.4.1 Indexing
 
-Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^{8^{p}}$)
+Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^{8^{c}}$)
 
-#### Clean $256^p$
+#### Exactly $256^c$
 
-* If the size ($m$) of the filter is $p$ powers of 256 ($256^p$), take the first $p$ bytes from the hash and interpret it as an index.
+* If the size ($m$) of the filter is $c$ powers of 256 ($256^c$), take the first $c$ bytes from the hash and interpret it as an index.
 
-* If the size is not a power of 256, take the next highest number of bytes, and use [rejection sampling]. For example, if the filter has 50,000 bits, take 2 bytes (max 65,536). if 
+* If the size is not a power of 256, take the next highest number of bytes, and use [rejection sampling]. For example, if the filter has 50,000 bits, take 2 bytes (max 65,536). If the number is less than than 50,000, use that number as the index. Otherwise, reject this number and take the next two bytes and repeat. Continue this process until a number of found, or you run out of two-byte segments. If the bytes have been exhausted, rehash the full value (all bytes) and begin the process again.
 
 #### 3.4.1.1 Rejection sampling
 
