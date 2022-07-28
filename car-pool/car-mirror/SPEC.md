@@ -357,7 +357,7 @@ All hashes generated for indexing MUST be interpreted as big endian.
 
 #### 3.4.1.1 Power of Two
 
-If the size ($m$) of the filter is $d$ powers of 2 ($2^d$), take the lowest $d$ bits from the hash and interpret it as an index. Taking the lowest $d$ bits MUST be done by AND-masking out the unused bits.
+If the size $m$ of the filter is $d$ powers of two ($2^d$), take the lowest (rightmost) $d$ bits from the hash and interpret it as an index.
 
 #### 3.4.1.2 Rejection Sampling
 
