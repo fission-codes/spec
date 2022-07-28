@@ -351,7 +351,7 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ### 3.4.1 Indexing
 
-Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of two ($2^c$). This is a single algorithm, but if the size of the Bloom filter is a power of two, rejection sampling MAY be omitted. Using a Bloom filter that is a power of two is RECOMMENDED since it avoids resampling.
+Indexes MUST be generated from hashes using the following strategy, based on whether or not the filter fits perfectly into a power of two ($2^c$). This is a single algorithm, but if the size of the Bloom filter is a power of two, rejection sampling MAY be omitted. Using a Bloom filter that is a power of two is RECOMMENDED since it avoids resampling.
 
 All hashes generated for indexing MUST be interpreted as big endian.
 
