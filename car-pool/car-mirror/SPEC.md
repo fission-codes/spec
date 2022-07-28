@@ -351,17 +351,17 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ### 3.4.1 Indexing
 
-Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^{8^{c}}$)
+Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^{8^{c}}$). This is a single algorithm, but if the size of the Bloom filter is a power of 256, rejection sampling MAY be omitted. Using a Bloom filter that is a power of 256 is RECOMMENDED, but this can sometimes make it difficult to tune a Bloom filter for some use cases.
 
-#### Exactly $256^c$
+#### 3.4.1.1 Exactly $256^c$
 
-* If the size ($m$) of the filter is $c$ powers of 256 ($256^c$), take the first $c$ bytes from the hash and interpret it as an index.
+If the size ($m$) of the filter is $c$ powers of 256 ($256^c$), take the first $c$ bytes from the hash and interpret it as an index.
 
-* If the size is not a power of 256, take the next highest number of bytes, and use [rejection sampling]. For example, if the filter has 50,000 bits, take 2 bytes (max 65,536). If the number is less than than 50,000, use that number as the index. Otherwise, reject this number and take the next two bytes and repeat. Continue this process until a number of found, or you run out of two-byte segments. If the bytes have been exhausted, rehash the full value (all bytes) and begin the process again.
+#### 3.4.1.2 Rejection Sampling
 
-#### 3.4.1.1 Rejection sampling
+If the size is not a power of 256, take the next highest number of bytes, and use [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling).
 
-This 
+For example, if the filter has 50,000 bits, take 2 bytes (max 65,536). If the number is less than than 50,000, use that number as the index. Otherwise, reject this number and take the next two bytes and repeat. Continue this process until a number of found, or you run out of two-byte segments. If the bytes have been exhausted, rehash the full value (all bytes) and begin the process again.
 
 ### 3.4.2 Optimization
 
