@@ -347,7 +347,29 @@ On the next round, the Requestor checks each block against the filter, and begin
 └─────────────────────┘   │                           │        └───────────────┘
 ```
 
-## 3.4 Bloom Optimization
+## 3.4 Bloom Filter
+
+### 3.4.1 Indexing
+
+Indexes MUST be generated from hashes using the following strategy, based on whether or not the filter fits perfectly into a power of two ($2^c$). This is a single algorithm, but if the size of the Bloom filter is a power of two, rejection sampling MAY be omitted. Using a Bloom filter that is a power of two is RECOMMENDED since it avoids resampling.
+
+NB: The Bloom filter's bucket order (index) MUST be interpreted big-endian and zero-indexed. All hashes generated for indexing MUST be interpreted as big-endian natural numbers.
+
+#### 3.4.1.1 Power of Two
+
+If the size $m$ of the filter is $d$ powers of two ($2^d$), take the lowest (rightmost) $d$ bits from the hash and interpret it as an index.
+
+#### 3.4.1.2 Rejection Sampling
+
+A Bloom filter MAY be a length that is not a power of two. This is NOT RECOMMENDED since it incurs [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling) overhead.
+
+This case uses the nearest rounded power of two as in [3.4.1.1](#3411-power-of-two). If the sampled number is less than $m$, then it MUST be used as the index. If the number is larger, then right shift the unmasked number, take the required number of bits (e.g. via AND-mask) and check again. Repeat this process until the number of digits is exhausted.
+
+If none of the samples succeed, a new hash MUST be generated and this process begun again. Hash generation MUST be performed via [XXH3](https://cyan4973.github.io/xxHash/) with the rehashing generation used as a seed (a simple counter).
+
+For example, if the filter has 1000 bits, take the lowest 10 bits (max 1024). If the number is less than than 1000, use that number as the index. Otherwise, right shift and try again. If the bits have been exhausted, rehash the full value and begin the process again.
+
+### 3.4.2 Optimization
 
 The parameters for the Bloom are set by the Requestor. Many of the parameters are self-evident from the filter itself, but the number of hashes must be passed along in the initial request.
 
@@ -355,9 +377,9 @@ Optimizing Bloom filters depends on balancing false positive probability (FPP or
 
 It is RECOMMENDED to make the FPP one order of magnitude (OOM) under the inverse of the order of magnitude of the number of inserted elements. For instance, if there are some 100ks of elements in the filter, then the FPP should be $1/1M$. This can grow quickly, so an implementation MAY use another order of magnitude, such as the inverse of the OOM of the number of inserted elements.
 
-The core idea of using a Bloom filter is that it is very fast and space efficient. For example, a Bloom filter with 100k elements and a FPP of $10^{-6}$ can be expressed in a little over 350KB.
+The core idea of using a Bloom filter is that it is very fast and space efficient. For example, an optimal Bloom filter with 100k elements and a FPP of $10^{-6}$ can be expressed in a little over 350KB.
 
-### 3.4.1 Equations
+#### 3.4.2.1 Equations
 
 Legend
 * $n$: number of elements in the filter
@@ -367,7 +389,7 @@ Legend
 
 Some [optimality equations](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions):
 * $k = {m \over n} \ln{2}$
-* $m=-\frac{n \ln \epsilon}{(\ln 2)^2}$
+* $m = -\frac{n \ln \epsilon}{(\ln 2)^2}$
 
 A typical example looks like this:
 
