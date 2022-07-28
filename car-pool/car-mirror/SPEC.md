@@ -351,17 +351,21 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ### 3.4.1 Indexing
 
-Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 256 ($2^{8^{c}}$). This is a single algorithm, but if the size of the Bloom filter is a power of 256, rejection sampling MAY be omitted. Using a Bloom filter that is a power of 256 is RECOMMENDED, but this can sometimes make it difficult to tune a Bloom filter for some use cases.
+Indexes generated from hashes MUST follow the following strategy based on if the filter fits perfectly into a power of 2 ($2^c$). This is a single algorithm, but if the size of the Bloom filter is a power of 2, rejection sampling MAY be omitted. Using a Bloom filter that is a power of 256 is RECOMMENDED, but this can sometimes make it difficult to tune a Bloom filter for some use cases.
 
-#### 3.4.1.1 Exactly $256^c$
+#### 3.4.1.1 Power of 2
 
-If the size ($m$) of the filter is $c$ powers of 256 ($256^c$), take the first $c$ bytes from the hash and interpret it as an index.
+If the size ($m$) of the filter is $d$ powers of 2 ($2^d$), take the lowest $d$ bits from the hash and interpret it as an index. Taking the lowest $d$ bits MUST be done by AND-masking out the unused bits.
 
 #### 3.4.1.2 Rejection Sampling
 
-If the size is not a power of 256, take the next highest number of bytes, and use [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling).
+When size ($m$) is not a power of 2, round the number of digits to the next highest power of two and use [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling).
 
-For example, if the filter has 50,000 bits, take 2 bytes (max 65,536). If the number is less than than 50,000, use that number as the index. Otherwise, reject this number and take the next two bytes and repeat. Continue this process until a number of found, or you run out of two-byte segments. If the bytes have been exhausted, rehash the full value (all bytes) and begin the process again.
+If the sampled number is less than $m$, then use it MUST be used as the index. If the number is larger, then the right shift the unmasked number, apply the AND-mask, and check again. Repeat this process until the number of digits is exhausted.
+
+If none of the samples succeeds, a new hash MUST be generated and this process begun again. Hash generation MUST be performed via XXH3_64 with the rehashing generation used as a seed (a simple counter).
+
+For example, if the filter has 1000 bits, take the lowest 10 bits (max 1024). If the number is less than than 1000, use that number as the index. Otherwise, reject this number and take the next two bytes and repeat. Continue this process until a number of found, or you run out of two-byte segments. If the bytes have been exhausted, rehash the full value (all bytes) and begin the process again.
 
 ### 3.4.2 Optimization
 
