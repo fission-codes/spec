@@ -377,7 +377,7 @@ Optimizing Bloom filters depends on balancing false positive probability (FPP or
 
 It is RECOMMENDED to make the FPP one order of magnitude (OOM) under the inverse of the order of magnitude of the number of inserted elements. For instance, if there are some 100ks of elements in the filter, then the FPP should be $1/1M$. This can grow quickly, so an implementation MAY use another order of magnitude, such as the inverse of the OOM of the number of inserted elements.
 
-The core idea of using a Bloom filter is that it is very fast and space efficient. For example, a Bloom filter with 100k elements and a FPP of $10^{-6}$ can be expressed in a little over 350KB.
+The core idea of using a Bloom filter is that it is very fast and space efficient. For example, an optimal Bloom filter with 100k elements and a FPP of $10^{-6}$ can be expressed in a little over 350KB.
 
 #### 3.4.2.1 Equations
 
