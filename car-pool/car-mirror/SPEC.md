@@ -365,7 +365,7 @@ If the sampled number is less than $m$, then use it MUST be used as the index. I
 
 If none of the samples succeeds, a new hash MUST be generated and this process begun again. Hash generation MUST be performed via XXH3_64 with the rehashing generation used as a seed (a simple counter).
 
-For example, if the filter has 1000 bits, take the lowest 10 bits (max 1024). If the number is less than than 1000, use that number as the index. Otherwise, reject this number and take the next two bytes and repeat. Continue this process until a number of found, or you run out of two-byte segments. If the bytes have been exhausted, rehash the full value (all bytes) and begin the process again.
+For example, if the filter has 1000 bits, take the lowest 10 bits (max 1024). If the number is less than than 1000, use that number as the index. Otherwise, right shift and try again. If the bits have been exhausted, rehash the full value (all bytes) and begin the process again.
 
 ### 3.4.2 Optimization
 
