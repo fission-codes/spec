@@ -365,7 +365,7 @@ A Bloom filter MAY be a length that is not a power of two. This is NOT RECOMMEND
 
 This case uses the nearest rounded power of two as in [3.4.1.1](#3411-power-of-two). If the sampled number is less than $m$, then it MUST be used as the index. If the number is larger, then right shift the unmasked number, take the required number of bits (e.g. via AND-mask) and check again. Repeat this process until the number of digits is exhausted.
 
-If none of the samples succeed, a new hash MUST be generated and this process begun again. Hash generation MUST be performed via [XXH3](https://cyan4973.github.io/xxHash/) with the rehashing generation used as a seed (a simple counter).
+If none of the samples succeed, a new hash MUST be generated and this process begun again. Hash generation MUST be performed via [XXH3](https://cyan4973.github.io/xxHash/) with the rehashing generation used as a seed (a simple counter, starting at 0).
 
 For example, if the filter has 1000 bits, take the lowest 10 bits (max 1024). If the number is less than than 1000, use that number as the index. Otherwise, right shift and try again. If the bits have been exhausted, rehash the full value and begin the process again.
 
