@@ -10,7 +10,7 @@
 
 # 0. Abstract
 
-CAR Mirror describes a method for efficiently diffing, deduplicating, packaging, and transmitting IPLD data from a source node. The two primary advantages of CAR Mirror are the reduction in network round trips versus [Bitswap](https://docs.ipfs.io/concepts/bitswap/), and probabilistically excluding redundant blocks from being transferred. The protocol aims to be easy to implement for clients, whether or not they have a complete [libp2p](https://libp2p.io/) network stack.
+CAR Mirror describes a method for efficiently diffing, deduplicating, packaging, and transmitting [IPLD](https://ipld.io/) data from a source node. The two primary advantages of CAR Mirror are the reduction in network round trips versus [Bitswap](https://docs.ipfs.io/concepts/bitswap/), and probabilistically excluding redundant blocks from being transferred. The protocol aims to be easy to implement for clients, whether or not they have a complete [libp2p](https://libp2p.io/) network stack.
 
 ## 0.1 Language
 
@@ -163,7 +163,7 @@ By analogy, the third option above is a little like playing Sudoku or Minesweepe
 
 ### 3.1.3 Transmission
 
-The actual transfer of blocks via a CARv1. This may be streaming, or a discrete file.
+The actual transfer of blocks is via a CARv1. This may be streaming, or a discrete file.
 
 #### 3.1.3.1 Cold Calls
 
