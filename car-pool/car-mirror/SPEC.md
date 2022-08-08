@@ -408,7 +408,13 @@ The primary challenge in determining what information to send is that this proto
 
 If a local store is on the order of 100,000s of blocks, then the entire store can reasonably be sent in the Bloom filter.
 
-### 3.5.2 Mutable Pointer
+### 3.5.2 Randomized Saturation
+
+In many cases -- importantly during cold calls -- a peer MAY not have enough information to fill a Bloom filter with relevant CIDs, or enough CIDs to fill out some minimum filter size (e.g. 1KB). In this case, it is RECOMMENDED that the Bloom be filled with random CIDs from the local store. While this may seem counterintuitive, this has the potential to reduce round trips in cases where the DAG being mirrored is deep rather than wide.
+
+Since the false positive probability is an order of magnitude lower than the number of elements, this means that a path will typically be incorrectly omitted on the order of 1/1M or lower probability for a single round. The overall strategy of CAR Mirror is to do the best possible with limited information. Given that the pathological case where we have no matches other than the roots in a round (i.e. the lower bound for performance) looks similar to Bitswap, this tradeoff is generally biased towards attempting deduplication with random CIDs.
+
+### 3.5.3 Mutable Pointer
 
 A simple heuristic is on data updated from a mutable pointer, such as on [IPNS](https://docs.ipfs.io/concepts/ipns/) or [DNSLink](https://dnslink.io). This often shares some structure, and thus the stale graph MAY be placed into the Bloom filter.
 
@@ -420,7 +426,7 @@ It is RECOMMENDED that CAR Mirror-enabled nodes maintain local caches of peer st
 
 ## 5.1 Why use a classic Bloom filter?
 
-There are many variants on Bloom filters that are used for similar problems in the literature, including the Invertible Bloom Filter, Distributed Bloom Filter, and HEX-BLOOM, among others. These all trade off size for the ability to synchronize multiple clients. CAR Mirror is a unicast source-to-sink protocol, thus the additional features of these structures are made redundant. 
+There are many variants on Bloom filters that are used for similar problems in the literature, including the Invertible Bloom Filter, Distributed Bloom Filter, and HEX-BLOOM, among others. These all trade off size for the ability to synchronize multiple clients. CAR Mirror is a unicast source-to-sink protocol, thus the additional features of these structures are made redundant. An XOR-Filter or Cuckoo Filter are possible space optimizations for a future iteration, but classic Blooms are extremely simple and easy to reason about.
 
 ## 5.2 Privacy
 
