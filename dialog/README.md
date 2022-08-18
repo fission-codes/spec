@@ -20,15 +20,37 @@ Dialog is a local-first database with novel ownership semantics, collaboration, 
 
 # 1 Introduction
 
-## 1.1 Motivation
+## 1.1 Motivation & Philosophy
 
 ## 1.2 Goals & Use Cases
 
-## 1.3 Properties
+### 1.2.1 User-Controlled Apps
 
-### 1.3.1 Subjective
+Should be easy for FE devs [...]
 
-### 1.3.1 Bitemporal
+### 1.2.2 Soft Realtime Collaboration
+
+Docs
+
+### 1.2.3 Blind Busses
+
+# 1.3 Properties
+
+### 1.3.1 User Agency
+
+### 1.3.1 Subjectivity
+
+Dialog eschews the [Single System Image](https://arxiv.org/pdf/1510.08473.pdf) in favor of [subjective views](https://people.csail.mit.edu/malte/pub/papers/2019-hotos-multiversedb.pdf), interpretations, and reinterpretations(!) of data. This embraces the fact that information is not evenly geograhicalluy distributed, that different users are interested in different data, and that social trust varies across users and time.
+
+This also leads to bitemporality.
+
+### 1.3.2 Tunable Consistency
+
+### 1.3.2 Byzantine Fault Tollerance
+
+### 1.3.1 Location Independence
+
+### 1.3.3 Portablility
 
 ## 1.4 High Level Structure
 
@@ -49,8 +71,7 @@ Access control within each Datalog store is intended to be extremely simple, and
 
 ## 3.1 Write Access
 
-Each store has a single writer, which is represented by the signing authority of one key. While this does impose a single threaded writer, a single writer may write unboundedly large transactions as IPLD. This is done for a few reasons:
-
+Each store has a single writer, which is represented by the signing authority of one key. While this does impose a single threaded writer, a single writer may write unboundedly large transactions as IPLD. This leads to a pull-based sychronization mechanism. This is done for a few reasons:
 
 
 ### 3.1.1 Concurrent Writes
