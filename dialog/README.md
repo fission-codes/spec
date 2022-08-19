@@ -178,7 +178,7 @@ Not all readers should be able to read all branches. This is accomplished by cha
 
            ┌───►●───►●───►●
            │
- ○───►○───►○───►○───►○───►○ # NOTE no blank/pivot node
+ ○───►○───►○───►○───►○───►○ # NOTE no blank/pivot/anchor node
 
  
            ┌───►●───►●───►●
