@@ -84,7 +84,16 @@ Access patterns are varied and complex. Placing some restriction on
 
 Read access control MUST be accomplished by encrypting the fact and indices at rest.
 
-### 3.2.1 Heirarchy
+### 3.2.1 Table Heirarchy Pattern
+
+* Backward Secrecy (Ratchet)
+
+Compound ratchet components: Store, entity, attribute, [FIXME hmmm value needs a unique key, and global counters are really bad for lookups...]
+Compound ratchet heirarchy: Store -> entity -> attribute -> value
+
+Used _both_ for lookup and encryption
+
+Minor revocations by tombstoning (forward posting), ratcheting upper portion + zero cascading. Evicting the entire store via sealing store with tombstone, and creating a new store.
 
 ```
 ┌────────────Store───────────┐
@@ -103,7 +112,6 @@ Read access control MUST be accomplished by encrypting the fact and indices at r
 │                            │
 └────────────────────────────┘
 ```
-
 
 ```
 ┌─────────Store──────────┐             ┌─────────Store─────────┐
@@ -125,7 +133,54 @@ Read access control MUST be accomplished by encrypting the fact and indices at r
 └────────────────────────┘             └───────────────────────┘
 ```
 
+### 3.2.2 Graph Dependency Pattern
 
+Graph-structured data often requires history to make sense of the later values. Two illustrative examples are LWW registers and [BFT-RGA](https://martin.kleppmann.com/papers/bft-crdt-papoc22.pdf):
+
+* LWW registers only watch the latest value, but determining this value depends on having access to _at minimum_ the greatest common meet
+* BFT-RGA encodes the structure of a docuemnt directly as linked dependencies between values that are nonsense on their own. At least a single full path (starting from genesis) through the graph is required
+
+This implies that dependency links MUST include the key to the previous fact _without_ exposing the internal ratchet state. "Flattened" skip ratchet
+
+Later updates MUST also be accessible to 
+
+Revocation -- especialy across stores -- is really difficult in this model, as other stores may continue to write in to the same history without realizing it. Incluing revocation lists as part of tombstoning may be one one way to communiate this info [FIXME!]
+
+#### 3.2.2.1 Hidden Branches
+
+Not all readers should be able to read all branches. This is accomplished by chaning one of the ratchet levels or a salt [FIXME expand!] and using blank nodes for attachment points.
+
+```
+○───►○───►◘───►●───►●───►●
+
+○───►○───►◘───►●───►●───►●
+          │
+          └───►○───►○───►○
+
+          ┌───►●───►●───►●
+          │
+○───►○───►◘
+          │
+          └───►○───►○───►○
+
+##############
+## OPPOSITE ##
+##############
+
+○───►○───►○───►○───►○───►○
+
+          ┌───►●───►●───►●
+          │
+○───►○───►○───►○───►○───►○
+
+          ┌───►●───►●───►●
+          │
+○───►○───►○
+          │
+          └───►○───►○───►○
+```
+
+### 3.2.3 Interaction
   
 # 4 Collaboration
 
