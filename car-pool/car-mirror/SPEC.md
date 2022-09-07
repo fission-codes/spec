@@ -167,65 +167,7 @@ The Provider MAY garbage collect its session state when it has exhausted its gra
 
 ## 3.2.2 Individual Round Sequence Diagram
 
-```plaintext
-┌─────────────────────┐                                                ┌────────────────────┐
-│                     │                                                │                    │
-│   Previous Round    │                                                │   Previous Round   │
-│  Bloom & CID Roots  │                                                │      Hash Set      │
-│                     │                                                │                    │
-└───┬────┬────────────┘                                                └────┬──────────┬────┘
-    │    │                                                                  │          │
-    │    │                                                                  │          │
-    │    │                                                                  │          │
-    │    │            Requestor                          Provider           │          │
-    │    │                │                                  │              │          │
-    │    │                │                                  │              │          │
-    │   Find New          │                                  │              │          │
-    │   Subgraph Roots    │                                  │              │          │
-    │   & Update Bloom    │                                  │              │          │
-    │    │                │                                  │              │          │
-    │    │                │                                  │              │          │
-    │    │                │        (Bloom, CID Roots)        │              │          │
-    │    └───────────────►├─────────────────────────────────►├────────┐     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │   Walk Local │          │
-    │                     │                                  │      Graph   │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        ▼     ▼          │
-    │                     │                                  │     ┌────────────────┐  │
-    │                     │                                  │     │                │  │
-    │                     │                                  │     │  Response CAR  │  │
-    │                     │                                  │     │                │  │
-    │                     │                                  │     └──┬─────┬───────┘  │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │       CAR { CID => Block }       │        │     │          │
-    │         ┌───────────┤◄─────────────────────────────────┤ ◄──────┘     │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │      Update         │                                  │              │          │
-    │    Local Store      │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    ▼         ▼           │                                  │              ▼          ▼
-┌─────────────────────┐   │                                  │         ┌────────────────────┐
-│                     │   │                                  │         │                    │
-│      Updated        │   │                                  │         │       Updated      │
-│  Bloom & CID Roots  │   │                                  │         │      Hash Set      │
-│                     │   │                                  │         │                    │
-└─────────────────────┘   │                                  │         └────────────────────┘
-```
+![](./diagrams/pull.svg)
 
 ## 3.3 Push Protocol 📤
 
