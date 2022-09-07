@@ -271,7 +271,7 @@ The sending Requestor begins with a local phase estimating what the Provider has
 
 The Requestor performs graph traversal of the data under the CID to push, appending blocks to a CAR file. This CAR MAY be discrete or streaming, depending on the transport. All other factors being equal, breadth-first traversal is RECOMMENDED. Since the Provider is not expected to use the data immediately, it exposes the largest number of roots, and thus grants the highest chance of discovering shared subgraphs. An implementation MAY choose a different traversal strategy, for example if it knows more about the use.
 
-On a partial cold call, the Provider Graph Estimate MUST contain the entire graph minus CIDs in the initial payload. The Provider MUST respond with a Bloom filter of all CIDs that match the Provder Graph Estimate, which is called the Provider Graph Confirmation. On subsequent rounds, the Provider Graph Estimate continues to be refined until is is empty or the entire graph has been synchronized.
+On a partial cold call, the Provider Graph Estimate MUST contain the entire graph minus CIDs in the initial payload. The Provider MUST respond with a Bloom filter of all CIDs that match the Provider Graph Estimate, which is called the Provider Graph Confirmation. On subsequent rounds, the Provider Graph Estimate continues to be refined until is is empty or the entire graph has been synchronized.
 
 At the end of each round, the receiving Provider MUST respond with a Bloom filter of likely future duplicates, and an array of CID roots for pending subgraphs. Either MAY be empty, in which case it is treated merely as an `ACK`.
 
