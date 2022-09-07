@@ -1,0 +1,106 @@
+digraph G {
+    rankdir = TB
+    splines = line
+
+    edge [
+        colorscheme = prgn11
+        color = 2
+
+        fontname = "Helvetica"
+        fontcolor = 2
+    ]
+
+    node [
+        shape = box
+        style = "rounded,filled"
+        colorscheme = prgn11
+
+        color = 2
+        fillcolor = 5
+
+        fontcolor = 2
+        fontname = "Helvetica"
+    ]
+
+    req [label = "Requestor"]
+    req_busy [
+        shape = rectangle
+        style = filled
+        label = "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+    ]
+    req_prev [label = "Previous Round\nBloom & CID Roots"]
+    req_next [label = "Updated\nBloom & CID Roots"]
+    req_end [shape = point, style = invis]
+    req_car [label = "Request CAR\nDAG Bloom"]
+
+    node [
+        color = 10
+        fillcolor = 7
+        fontcolor = 10
+    ]
+
+    resp [label = "Responder"]
+    resp_busy [
+        shape = rectangle
+        style = filled
+        label = ""
+        paddbusyg = none
+        height = 2
+    ]
+    resp_end [shape = point, style = invis]
+
+    resp_prev [label = "Previous Round\nHash Set"]
+    resp_next [label = "Updated\nHash Set"]
+    resp_bloom [label = "Bloom &\nCID Roots"]
+
+    #########
+    # Edges #
+    #########
+
+    req_prev -> req_next:nw [weight = 100]
+    req_busy:sw -> req_next [label = "\nUpdate\nlocal cache", style = bold]
+    req_busy -> req_end [arrowhead = tee, style = dashed, weight = 100]
+
+    req_prev -> req_car [label = "Walk\nlocal graph"]
+    req_car -> req_busy:nw
+    req_car -> req_next [weight = 100]
+
+    edge [color = 10, fontcolor = 10]
+
+    resp_prev -> resp_bloom:n
+    resp_busy:ne -> resp_bloom:n [label = "Add blocks\n& compare\nBloom filter", style = bold]
+    resp_bloom:s -> resp_busy:se [style = bold]
+    resp_bloom:s -> resp_next [weight = 100]
+    resp_busy -> resp_end [arrowhead = tee, style = dashed, weight = 100]
+
+    edge [color = black, fontcolor = black, fontname = "Courier"]
+
+    req_busy:ne -> resp_busy:nw [label = "CAR {CID => Block}\nand remaining\ngraph Bloom " style = bold]
+    resp_busy:sw -> req_busy:se [label = "(Bloom, CID Roots)" style = bold]
+
+    ##############
+    # Structural #
+    ##############
+
+    edge [
+        color = black
+        style = dashed
+        arrowhead = none
+    ]
+
+    req -> req_busy [weight = 100]
+    resp -> resp_busy [weight = 100]
+
+    ################
+    # Layout Hacks #
+    ################
+
+    edge [style = invis]
+
+    req_prev -> req [minlen = 4]
+    resp_next:nw -> resp_bloom:se
+
+    {rank = same req resp req_prev resp_prev}
+    {rank = same req_end resp_end req_next resp_next}
+    {rank = same req_busy resp_busy resp_bloom}
+}

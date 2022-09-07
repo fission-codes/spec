@@ -187,75 +187,7 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ## 3.3.2 Individual Round Sequence Diagram
 
-```plaintext
-┌─────────────────────┐
-│                     │                                     ┌─────────────────────┐
-│   Previous Round    │                                     │                     │
-│  Bloom, Hash Set,   │                                     │   Previous Round    │
-│     & CID Roots     │                                     │  Bloom & CID Roots  │
-│                     │                                     │                     │
-└───┬─────────┬───────┘                                     └──────────┬──────────┘
-    │         │                                                        │
-    │         │                                                        │
-    │         │                                                        │
-    │         │       Requestor                   Provider             │
-    │         │           │                           │                │
-    │         │           │                           │                │
-    │     Walk local      │                           │                │
-    │       graph         │                           │                │
-    │         │           │                           │                │
-    │         │           │                           │                │
-    │         │           │                           │                │
-    │ ┌───────┴───────┐   │                           │                │
-    │ │               │   │                           │                │
-    │ │  Request CAR  │   │                           │                │
-    │ │   DAG Bloom   │   │                           │                │
-    │ │               │   │                           │                │
-    │ └──┬─────┬──────┘   │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │   CAR { CID => Block }    │                │
-    │    │     │          │            and            │                │
-    │    │     │          │   remaining graph Bloom   │                │
-    │    │     └─────────►├──────────────────────────►├─────────┐      │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │    Add Blocks  │
-    │    │                │                           │    and compare │
-    │    │                │                           │   Bloom filter │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │         ▼      ▼
-    │    │                │                           │      ┌─────────────┐
-    │    │                │                           │      │             │
-    │    │                │                           │      │   Bloom &   │
-    │    │                │                           │      │  CID Roots  │
-    │    │                │                           │      │             │
-    │    │                │                           │      └──┬──────┬───┘
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │    (Bloom, CID Roots)     │         │      │
-    │    │     ┌──────────┤◄──────────────────────────┼─◄───────┘      │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │   Update       │                           │                │
-    │    │ Local Cache    │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    ▼    ▼     ▼          │                           │                ▼
-┌─────────────────────┐   │                           │        ┌───────────────┐
-│                     │   │                           │        │               │
-│      Updated        │   │                           │        │    Updated    │
-│  Bloom & CID Roots  │   │                           │        │   Hash Set    │
-│                     │   │                           │        │               │
-└─────────────────────┘   │                           │        └───────────────┘
-```
+![](./diagrams/push.svg)
 
 ## 3.4 Bloom Filter
 
