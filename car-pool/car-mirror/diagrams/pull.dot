@@ -1,0 +1,99 @@
+digraph G {
+    rankdir = TB
+
+    edge [
+        colorscheme = prgn11
+        color = 2
+
+        fontname = "Helvetica"
+        fontcolor = 2
+    ]
+
+    node [
+        shape = box
+        style = "rounded,filled"
+        colorscheme = prgn11
+
+        color = 2
+        fillcolor = 5
+
+        fontcolor = 2
+        fontname = "Helvetica"
+    ]
+
+    req [label = "Requestor"]
+    // req_out [shape = point style = invis]
+    req_out [
+        shape = rectangle
+        style = filled
+        label = "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        padding = none
+    ]
+    req_in [shape = point, style = invis]
+    req_end [shape = point, style = invis]
+
+    resp [label = "Responder"]
+    resp_in [shape = point, style = invis]
+    resp_out [shape = point, style = invis]
+    resp_end [shape = point, style = invis]
+
+    req_prev [label = "Previous Round\nBloom & CID Roots"]
+    req_next [label = "Updated\nBloom & CID Roots"]
+
+    resp_prev [label = "Previous Round\nHash Set"]
+    resp_car [label = "Response CAR"]
+    resp_next [label = "Updated\nHash Set"]
+
+    #########
+    # Edges #
+    #########
+
+
+    # Stages
+
+    req_prev -> req_out:nw [
+        label = "Find new\nsubgraph root\n& update Bloom"
+    ]
+
+    req_prev -> req_next [weight = 100]
+    resp_prev -> resp_next [weight = 100]
+
+    req_out:ne -> resp_in [label = "(Bloom, CID Roots)"]
+
+    resp_prev -> resp_car:ne
+    resp_in -> resp_car:nw [label = "Walk local graph"]
+    resp_car:se -> resp_next
+
+    resp_car:sw -> resp_out
+    resp_out -> req_in [label = "CAR {CID => Block}"]
+    req_in -> req_next [label = "Update\nLocal Store"]
+
+    ##############
+    # Structural #
+    ##############
+
+    edge [
+          color = black
+          style = dashed
+          arrowhead = none
+    ]
+
+    req -> req_out [weight = 100]
+    resp -> resp_in [weight = 100]
+
+    req_out -> req_in [weight = 100]
+    resp_in -> resp_out [weight = 100]
+
+    req_in -> req_end [arrowhead = tee weight = 100]
+    resp_out -> resp_end [arrowhead = tee weight = 100]
+
+    ################
+    # Layout Hacks #
+    ################
+
+    resp_end -> resp_next [style = invis]
+    resp_out -> req_in [style = invis]
+
+    {rank = same req resp req_prev resp_prev}
+    {rank = same req_end resp_end req_next resp_next}
+}
