@@ -107,7 +107,7 @@ The protocol here is described in discrete rounds. When run over fully bidirecti
 
 ## 3.1 Phases
 
-![](./disgrams/phases.svg)
+![](./diagrams/phases.svg)
 
 ### 3.1.1 Selection
 
