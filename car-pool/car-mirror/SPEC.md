@@ -107,41 +107,7 @@ The protocol here is described in discrete rounds. When run over fully bidirecti
 
 ## 3.1 Phases
 
-```plaintext
-  ┌─────────────┐
-  │             │
-  │  Selection  │
-  │             │
-  └──────┬──────┘
-         │
-         ▼
-  ┌─────────────┐
-  │             │
-  │  Narrowing  │◄───────┐
-  │             │        │
-  └──────┬──────┘        │
-         │               │
-         ▼               │
-┌────────────────┐       │
-│                │       │
-│  Transmission  │       │ Next Round
-│                │       │
-└────────┬───────┘       │
-         │               │
-         ▼               │
-┌────────────────┐       │
-│                │       │
-│  Graph Status  ├───────┘
-│                │
-└────────┬───────┘
-         │
-         ▼
-   ┌───────────┐
-   │           │
-   │  Cleanup  │
-   │           │
-   └───────────┘
-```
+![](./disgrams/phases.svg)
 
 ### 3.1.1 Selection
 
