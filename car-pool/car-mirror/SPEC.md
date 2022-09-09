@@ -1,4 +1,4 @@
-# CAR Mirror
+# CAR Mirror v0.1.0
 
 > Objects in the CAR Mirror are closer than they appear
 >
@@ -107,41 +107,7 @@ The protocol here is described in discrete rounds. When run over fully bidirecti
 
 ## 3.1 Phases
 
-```plaintext
-  ┌─────────────┐
-  │             │
-  │  Selection  │
-  │             │
-  └──────┬──────┘
-         │
-         ▼
-  ┌─────────────┐
-  │             │
-  │  Narrowing  │◄───────┐
-  │             │        │
-  └──────┬──────┘        │
-         │               │
-         ▼               │
-┌────────────────┐       │
-│                │       │
-│  Transmission  │       │ Next Round
-│                │       │
-└────────┬───────┘       │
-         │               │
-         ▼               │
-┌────────────────┐       │
-│                │       │
-│  Graph Status  ├───────┘
-│                │
-└────────┬───────┘
-         │
-         ▼
-   ┌───────────┐
-   │           │
-   │  Cleanup  │
-   │           │
-   └───────────┘
-```
+![](./diagrams/phases.svg)
 
 ### 3.1.1 Selection
 
@@ -201,65 +167,7 @@ The Provider MAY garbage collect its session state when it has exhausted its gra
 
 ## 3.2.2 Individual Round Sequence Diagram
 
-```plaintext
-┌─────────────────────┐                                                ┌────────────────────┐
-│                     │                                                │                    │
-│   Previous Round    │                                                │   Previous Round   │
-│  Bloom & CID Roots  │                                                │      Hash Set      │
-│                     │                                                │                    │
-└───┬────┬────────────┘                                                └────┬──────────┬────┘
-    │    │                                                                  │          │
-    │    │                                                                  │          │
-    │    │                                                                  │          │
-    │    │            Requestor                          Provider           │          │
-    │    │                │                                  │              │          │
-    │    │                │                                  │              │          │
-    │   Find New          │                                  │              │          │
-    │   Subgraph Roots    │                                  │              │          │
-    │   & Update Bloom    │                                  │              │          │
-    │    │                │                                  │              │          │
-    │    │                │                                  │              │          │
-    │    │                │        (Bloom, CID Roots)        │              │          │
-    │    └───────────────►├─────────────────────────────────►├────────┐     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │   Walk Local │          │
-    │                     │                                  │      Graph   │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        ▼     ▼          │
-    │                     │                                  │     ┌────────────────┐  │
-    │                     │                                  │     │                │  │
-    │                     │                                  │     │  Response CAR  │  │
-    │                     │                                  │     │                │  │
-    │                     │                                  │     └──┬─────┬───────┘  │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │                                  │        │     │          │
-    │                     │       CAR { CID => Block }       │        │     │          │
-    │         ┌───────────┤◄─────────────────────────────────┤ ◄──────┘     │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │      Update         │                                  │              │          │
-    │    Local Store      │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    │         │           │                                  │              │          │
-    ▼         ▼           │                                  │              ▼          ▼
-┌─────────────────────┐   │                                  │         ┌────────────────────┐
-│                     │   │                                  │         │                    │
-│      Updated        │   │                                  │         │       Updated      │
-│  Bloom & CID Roots  │   │                                  │         │      Hash Set      │
-│                     │   │                                  │         │                    │
-└─────────────────────┘   │                                  │         └────────────────────┘
-```
+![](./diagrams/pull.svg)
 
 ## 3.3 Push Protocol 📤
 
@@ -267,9 +175,11 @@ The Provider MAY garbage collect its session state when it has exhausted its gra
 
 The push protocol is very similar to pull (§3.2), roughly inverted. The major difference aside from direction of data flow is that the first round MAY be a "cold call". This prioritizes starting the first round with zero information about the Provider, under the assumption that the first branch of the graph will either not contain many duplicate blocks, or if it does that it is doing as well as the prior art CAR transfers. This strategy prioritizes limiting round trips over reducing bandwidth.
 
-The sending Requestor begins with a local phase estimating what the Provider has in its store. This may be from stateful information (e.g. Bloom filters and CIDs) learned in a previous round, or by using a heuristic such as knowing that the provider has a previous copy associated with an IPNS record or DNSLink. If no information is available, the estimate is the empty set.
+The sending Requestor begins with a local phase estimating what the Provider has in its store. This estimate is called the Provider Graph Estimate. This may be from stateful information (e.g. Bloom filters and CIDs) learned in a previous round, or by using a heuristic such as knowing that the provider has a previous copy associated with an IPNS record or DNSLink. If no information is available, the estimate is the empty set.
 
 The Requestor performs graph traversal of the data under the CID to push, appending blocks to a CAR file. This CAR MAY be discrete or streaming, depending on the transport. All other factors being equal, breadth-first traversal is RECOMMENDED. Since the Provider is not expected to use the data immediately, it exposes the largest number of roots, and thus grants the highest chance of discovering shared subgraphs. An implementation MAY choose a different traversal strategy, for example if it knows more about the use.
+
+On a partial cold call, the Provider Graph Estimate MUST contain the entire graph minus CIDs in the initial payload. The Provider MUST respond with a Bloom filter of all CIDs that match the Provider Graph Estimate, which is called the Provider Graph Confirmation. On subsequent rounds, the Provider Graph Estimate continues to be refined until it is empty or the entire graph has been synchronized.
 
 At the end of each round, the receiving Provider MUST respond with a Bloom filter of likely future duplicates, and an array of CID roots for pending subgraphs. Either MAY be empty, in which case it is treated merely as an `ACK`.
 
@@ -277,75 +187,7 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ## 3.3.2 Individual Round Sequence Diagram
 
-```plaintext
-┌─────────────────────┐
-│                     │                                     ┌─────────────────────┐
-│   Previous Round    │                                     │                     │
-│  Bloom, Hash Set,   │                                     │   Previous Round    │
-│     & CID Roots     │                                     │  Bloom & CID Roots  │
-│                     │                                     │                     │
-└───┬─────────┬───────┘                                     └──────────┬──────────┘
-    │         │                                                        │
-    │         │                                                        │
-    │         │                                                        │
-    │         │       Requestor                   Provider             │
-    │         │           │                           │                │
-    │         │           │                           │                │
-    │     Walk local      │                           │                │
-    │       graph         │                           │                │
-    │         │           │                           │                │
-    │         │           │                           │                │
-    │         │           │                           │                │
-    │ ┌───────┴───────┐   │                           │                │
-    │ │               │   │                           │                │
-    │ │  Request CAR  │   │                           │                │
-    │ │   DAG Bloom   │   │                           │                │
-    │ │               │   │                           │                │
-    │ └──┬─────┬──────┘   │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │   CAR { CID => Block }    │                │
-    │    │     │          │            and            │                │
-    │    │     │          │   remaining graph Bloom   │                │
-    │    │     └─────────►├──────────────────────────►├─────────┐      │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │    Add Blocks  │
-    │    │                │                           │    and compare │
-    │    │                │                           │   Bloom filter │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │         ▼      ▼
-    │    │                │                           │      ┌─────────────┐
-    │    │                │                           │      │             │
-    │    │                │                           │      │   Bloom &   │
-    │    │                │                           │      │  CID Roots  │
-    │    │                │                           │      │             │
-    │    │                │                           │      └──┬──────┬───┘
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │                           │         │      │
-    │    │                │    (Bloom, CID Roots)     │         │      │
-    │    │     ┌──────────┤◄──────────────────────────┼─◄───────┘      │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │   Update       │                           │                │
-    │    │ Local Cache    │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    │    │     │          │                           │                │
-    ▼    ▼     ▼          │                           │                ▼
-┌─────────────────────┐   │                           │        ┌───────────────┐
-│                     │   │                           │        │               │
-│      Updated        │   │                           │        │    Updated    │
-│  Bloom & CID Roots  │   │                           │        │   Hash Set    │
-│                     │   │                           │        │               │
-└─────────────────────┘   │                           │        └───────────────┘
-```
+![](./diagrams/push.svg)
 
 ## 3.4 Bloom Filter
 

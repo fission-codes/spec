@@ -1,4 +1,4 @@
-# CAR Pool
+# CAR Pool v0.1.0
 
 CAR Pool is a collection of specs, which taken together aim to provide a network efficient method for transmitting data from one or more sources to a single sink.
 
