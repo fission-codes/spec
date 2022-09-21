@@ -12,6 +12,7 @@
 
 ## Specs
 
+* [Dataflow Runtime](./dialog/dataflow.md)
 * [Query Engine](./dialog/query-engine.md)
 
 ## Appendices
