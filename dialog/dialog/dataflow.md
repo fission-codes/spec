@@ -41,6 +41,8 @@ ZSets can be written as lists of triples:
 
 Implementations should support efficient sequential access of a ZSet, first by element, and then by timestamp.
 
+Some operations return ZSets without timestamp information, and implementations MAY specialize a variant of the data structure for those cases.
+
 ## 2.2 Indexed ZSet
 
 A set of key-value pairs, each associated with a [weight](#24-weight) and [timestamp](#25-timestamp).
@@ -56,6 +58,8 @@ Indexed ZSets can be written as lists of triples:
 ```
 
 Implementations should support efficient sequential access of an Indexed ZSet, first by key, and then by value, and lastly by timestamp.
+
+Some operations return Indexed ZSets without timestamp information, and implementations MAY specialize a variant of the data structure for those cases.
 
 ## 2.3 Trace
 
@@ -178,65 +182,199 @@ Emits data over a stream, without accepting any inputs from the circuit.
 
 An operator specifies an operation against a stream, and is represented by a node. Operators MAY be stateful, and linear operators are those which can be computed using only the deltas at the current timestamp.
 
-| Name                                                    | Linearity              | Input Types                | Output Type  |
-| ------------------------------------------------------- | ---------------------- | -------------------------- | ------------ |
-| [Aggregate](#291-aggregate-operator)                    | Varies                 | Indexed ZSet               | ZSet         |
-| [Consolidate](#292-consolidate-operator)                | Linear                 | Trace                      | ZSet         |
-| [Distinct](#293-distinct-operator)                      | Non-Linear             | ZSet                       | ZSet         |
-| [Filter](#294-filter-operator)                          | Linear                 | ZSet                       | ZSet         |
-| [IndexWith](#295-indexwith-operator)                    | Linear                 | ZSet                       | Indexed ZSet |
-| [Inspect](#296-inspect-operator)                        | Linear                 | ZSet                       | ZSet         |
-| [Map](#297-map-operator)                                | Linear                 | ZSet                       | ZSet         |
-| [Negate](#298-negate-operator)                          | Linear                 | ZSet                       | ZSet         |
-| [Z1Trace](#299-z1trace-operator)                        | Linear                 | Trace                      | Trace        |
-| [Z1](#2910-z1-operator)                                 | Linear                 | ZSet                       | ZSet         |
-| [DistinctTrace](#2911-distincttrace-operator)           | Non-Linear             | ZSet, Trace                | ZSet         |
-| [JoinStream](#2912-joinstream-operator)                 | Linear                 | Indexed ZSet, Indexed ZSet | ZSet         |
-| [JoinTrace](#2913-jointrace-operator)                   | Bilinear               | Indexed ZSet, Trace        | ZSet         |
-| [Minus](#2914-minus-operator)                           | Linear                 | ZSet, ZSet                 | ZSet         |
-| [Plus](#2915-minus-operator)                            | Linear                 | ZSet, ZSet                 | ZSet         |
-| [TraceAppend](#2916-traceappend-operator)               | Non-Linear (TODO ish?) | ZSet, Trace                | Trace        |
-| [UntimedTraceAppend](#2917-untimedtraceappend-operator) | Non-Linear (TODO ish?) | ZSet, Trace                | Trace        |
+| Name                                                    | Linearity              | Input Types                                                 | Output Type  |
+| ------------------------------------------------------- | ---------------------- | ----------------------------------------------------------- | ------------ |
+| [Aggregate](#291-aggregate-operator)                    | Varies                 | Indexed ZSet                                                | ZSet         |
+| [Consolidate](#292-consolidate-operator)                | Linear                 | Trace                                                       | ZSet         |
+| [Distinct](#293-distinct-operator)                      | Non-Linear             | ZSet                                                        | ZSet         |
+| [Filter](#294-filter-operator)                          | Linear                 | ZSet                                                        | ZSet         |
+| [IndexWith](#295-indexwith-operator)                    | Linear                 | ZSet                                                        | Indexed ZSet |
+| [Inspect](#296-inspect-operator)                        | Linear                 | ZSet                                                        | ZSet         |
+| [Map](#297-map-operator)                                | Linear                 | ZSet                                                        | ZSet         |
+| [Negate](#298-negate-operator)                          | Linear                 | ZSet                                                        | ZSet         |
+| [Z1Trace](#299-z1trace-operator)                        | Linear                 | Trace                                                       | Trace        |
+| [Z1](#2910-z1-operator)                                 | Linear                 | ZSet                                                        | ZSet         |
+| [DistinctTrace](#2911-distincttrace-operator)           | Non-Linear             | ZSet, Trace                                                 | ZSet         |
+| [JoinStream](#2912-joinstream-operator)                 | Linear                 | Indexed ZSet, Indexed ZSet                                  | ZSet         |
+| [JoinTrace](#2913-jointrace-operator)                   | Bilinear               | Indexed ZSet, Trace                                         | ZSet         |
+| [Minus](#2914-minus-operator)                           | Linear                 | ZSet, ZSet (TODO: does this need to support indexed zsets?) | ZSet         |
+| [Plus](#2915-minus-operator)                            | Linear                 | ZSet, ZSet (TODO: does this need to support indexed zsets?) | ZSet         |
+| [TraceAppend](#2916-traceappend-operator)               | Non-Linear (TODO ish?) | ZSet, Trace                                                 | Trace        |
+| [UntimedTraceAppend](#2917-untimedtraceappend-operator) | Non-Linear (TODO ish?) | ZSet, Trace                                                 | Trace        |
 
 ## 2.9.1 Aggregate Operator
 
 Applies an aggregate to all elements of the input stream.
 
+This operator takes an [Indexed ZSet](#22-indexed-zset) as input, and applies an aggregate function over it, to return a [ZSet](#21-zset) that summarizes the values under each key, and associating a weight of `1` to each element. The resulting ZSet has no timestamps associated with any element.
+
+(TODO: maybe it should use the circuit's current timestamp. I need to do some experimentation with timestamps because I think I can simplify the model slightly)
+
+Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the [specification for the query language](query-engine.md#aggregation).
+
+If additional aggregates are supported, they MUST be pure functions, and implementations are RECOMMENDED to enforce this constraint.
+
+For example:
+```
+aggregate(count, [
+    {{1, "foo"}, 0, 1},
+    {{1, "bar"}, 0, 1},
+    {{2, "baz"}, 0, 1}
+]) => [
+    {{1, 2}, nil, 1},
+    {{2, 1}, nil, 1}
+]
+```
+
 ## 2.9.2 Consolidate Operator
 
-Merges all ZSets in the input trace.
+Merges all deltas in the input trace into a [ZSet](#21-zset). The resulting ZSet has no timestamps associated with any element, and sums the weights for each key-value pair. Elements with weight equal to zero are discarded.
+
+(TODO: revisit the timestamp point; it may be sufficient to map each element to the largest timestamp used to compute it, while still guaranteeing termination)
+
+This operator is intended to combine deltas from across multiple timestamps into a single ZSet, and is used to export the results of a recursive subcircuit to the parent for further processing.
+
+For example:
+```
+consolidate([
+    {0, 0, 0, 1},
+    {0, 0, 0, -1},
+    {0, 1, 0, 1},
+    {0, 1, 0, 1}.
+    {1, 2, 0, 2},
+    {1, 3, 0, 1},
+    {1, 3, 0, -1},
+    {1, 4, 0 -1},
+    {2, 2, 0, 1},
+    {2, 4, 0 1}
+]) => [
+    {{0, 1}, nil, 2},
+    {{1, 2}, nil, 2},
+    {{1, 4}, nil, -1},
+    {{2, 2}, nil, 1},
+    {{2, 4}, nil, 1}
+]
+```
 
 ## 2.9.3 Distinct Operator
 
-Returns one of each element whose summed weight is positive.
+Returns a ZSet containing elements in the input [ZSet](#21-zset) with positive weight, replacing their weight with `1`.
+
+For example:
+```
+distinct([
+    {0, 0, 1},
+    {1, 0, 2},
+    {2, 0, -1},
+    {3, 0, 0}
+]) => [
+    {0, 0, 1},
+    {1, 0, 1}
+]
+```
 
 ## 2.9.4 Filter Operator
 
-Filters a ZSet by a predicate.
+Filters a [ZSet](#21-zset) by a predicate. The predicate MUST be a pure function, returning a boolean.
+
+For example: (TODO: what notation should I use for anonymous functions in the spec?)
+```
+predicate = fn x -> x >= 1 end
+
+filter(predicate, [
+    {0, 0, 1},
+    {1, 0, 2},
+    {2, 1, -3}
+]) => [
+    {1, 0, 2},
+    {2, 1, -3}
+]
+```
 
 ## 2.9.5 IndexWith Operator
 
-Groups elements of a ZSet according to some key function.
+Groups elements of a [ZSet](#21-zset) according to some key function, returning an [Indexed ZSet](#22-indexed-zset).
+
+For example:
+```
+key_function = fn {src, dst, cost} -> src end
+
+index_with(key_function, [
+    {{0, 1, 1}, 0, 1},
+    {{1, 2, 1}, 1, 1},
+    {{1, 3, 2}, 1, -1}
+]) => [
+    {{0, {0, 1, 1}}, 0, 1},
+    {{1, {1, 2, 1}}, 1, 1},
+    {{1, {1, 3, 2}}, 1, -1}
+]
+```
 
 ## 2.9.6 Inspect Operator
 
-Applies a callback to a ZSet, returning the original ZSet.
+Applies a callback to a [ZSet](#21-zset), returning the original ZSet.
+
+This operator is primarily intended as a debugging aid, and can be used to output the contents of streams at runtime.
+
+For example:
+```
+inspect_fun = fn x -> IO.inspect(x) end
+
+inspect([
+    {0, 1, 1},
+    {1, 1, 1}
+]) => [
+    {0, 1, 1},
+    {1, 1, 1}
+] # Also printing out [{0, 1, 1}, {1, 1, 1}]
+```
 
 ## 2.9.7 Map Operator
 
-Transforms elements of a ZSet according to some function.
+Transforms elements of a [ZSet](#21-zset) according to some function. The predicate MUST be a pure function.
+
+For example:
+```
+predicate = fn x -> x >= 1 end
+
+filter(predicate, [
+    {0, 0, 1},
+    {1, 0, 2},
+    {2, 1, -3}
+]) => [
+    {1, 0, 2},
+    {2, 1, -3}
+]
+```
 
 ## 2.9.8 Negate Operator
 
-Negates the weights of each element in a ZSet.
+Negates the weights of each element in a [ZSet](#21-zset).
+
+For example:
+```
+negate([
+    {0, 0, 1},
+    {1, 0, -1},
+    {2, 0, -2}
+]) => [
+    {0, 0, -1},
+    {1, 0, 1},
+    {2, 0, 2}
+]
+```
 
 ## 2.9.9 Z1Trace Operator
 
-Returns the previous input trace.
+Returns the previous input [trace](#23-trace).
+
+TODO: Decide whether the feedback operators belong alongside regular operators, or if they should be considered special, because they tend to be used in special feedback nodes that introduce cycles into the circuit.
 
 ## 2.9.10 Z1 Operator
 
-Returns the previous ZSet.
+Returns the previous input [ZSet](#21-zset).
+
+TODO: Decide whether the feedback operators belong alongside regular operators, or if they should be considered special, because they tend to be used in special feedback nodes that introduce cycles into the circuit.
 
 ## 2.9.11 DistinctTrace Operator
 
@@ -252,11 +390,59 @@ Incremental version of JoinStream (TODO separate this out?).
 
 ## 2.9.14 Minus Operator
 
-Subtracts all weights for matching keys in two ZSets.
+Subtracts all weights for matching elements in two ZSets. Elements with combined weight equal to zero are discarded.
+
+TODO: Decide whether this needs to work for Indexed ZSets too. It does in my prototype, but I don't know if that's ever needed.
+
+For example:
+```
+a = [
+    {0, 0, 1},
+    {1, 0, 1},
+    {2, 0, 2},
+    {3, 0, 1}
+]
+
+b = [
+    {0, 0, 1},
+    {1, 0, -1},
+    {2, 0, 1}
+]
+
+minus(a, b) => [
+    {1, 0, 2},
+    {2, 0, 1},
+    {3, 0, 1}
+]
+```
 
 ## 2.9.15 Plus Operator
 
-Adds all weights for matching keys in two ZSets.
+Adds all weights for matching keys in two ZSets. Elements with combined weight equal to zero are discarded.
+
+TODO: Decide whether this needs to work for Indexed ZSets too. It does in my prototype, but I don't know if that's ever needed.
+
+For example:
+```
+a = [
+    {0, 0, 1},
+    {1, 0, 1},
+    {2, 0, 2},
+    {3, 0, 1}
+]
+
+b = [
+    {0, 0, 1},
+    {1, 0, -1},
+    {2, 0, 1}
+]
+
+plus(a, b) => [
+    {0, 0, 2},
+    {2, 0, 3},
+    {3, 0, 1}
+]
+```
 
 ## 2.9.16 TraceAppend Operator
 
