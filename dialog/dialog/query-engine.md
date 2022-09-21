@@ -13,7 +13,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 Dialog is query language agnostic, and implementations MAY define arbitrary query frontends. This specification describes the semantics for Dialog's underlying query engine, to which these frontends MUST conform.
 
-# 1 Introduction
+# 1. Introduction
 
 The semantics of Dialog's underlying query engine match those of Datalog, extended to support queries over time against a dynamic and content-addressable database.
 
