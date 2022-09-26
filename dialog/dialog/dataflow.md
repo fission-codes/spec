@@ -320,7 +320,7 @@ For example:
 ```
 inspect_fun = fn x -> IO.inspect(x) end
 
-inspect([
+inspect(inspect_fun, [
     {0, 1, 1},
     {1, 1, 1}
 ]) => [
@@ -382,11 +382,99 @@ Incremental version of Distinct (TODO separate this out?).
 
 ## 2.9.12 JoinStream Operator
 
-Joins two ZSets together according to their keys (TODO might not want this).
+(TODO might not want this: this is a non-incremental join against streams, that only joins collections from the current timestamp)
+
+Joins two [Indexed ZSets](#22-indexed-zset) together. It applies a join function to values with matching keys, returning a [ZSet](#21-zset) containing the resulting elements, with no timestamps associated with those elements, and each element's weight given by the product of the two elements' weights that were joined together.
+
+For example:
+```
+join_fun =
+    fn key, v1, v2 ->
+        {key, {v1, v2}}
+    end
+
+a = [
+    {{:a, 1}, 0, 1},
+    {{:b, 2}, 0, 2},
+    {{:c, 2}, 0, 1}
+]
+
+b = [
+    {{:a, 1}, 0, 1},
+    {{:b, 3}, 0, 1},
+    {{:b, 4}, 0, -1}
+]
+
+join_stream(join_fun, a, b) => [
+    {{:a, {1, 1}}, nil, 1},
+    {{:b, {2, 3}}, nil, 2},
+    {{:b, {2, 4}}, nil, -2}
+]
+```
 
 ## 2.9.13 JoinTrace Operator
 
-Incremental version of JoinStream (TODO separate this out?).
+(TODO: improve this explanation. It probably makes more sense to instead describe non-incremental join, and then show how bilinearity leads to this incremental version)
+
+A variant of join that joins an [Indexed ZSet](#22-indexed-zset) with a [Trace](#23-trace). This takes advantage of the bilinearity of relational joins in order to support incremental joins across timestamps.
+
+Tt returns a ZSet containing the resulting elements, with no timestamps associated with each of those elements, and each element's weight given by the product of the two elements' weights that were joined together.
+
+It behaves similarly to [JoinStream](#2912-joinstream-operator), and the first argument represents deltas for the current timestamp, with the second being a trace containing all updates observed thus far. In this way, an incremental join can be implements as follows:
+
+```
+join_fun = ...
+
+join_fun_flipped =
+    fn k, v1, v2 ->
+        join_fun(k, v2, v1)
+    end
+
+a = ... # some ZSet
+b = ... # some ZSet
+
+a_trace = z1_trace(a)
+b_trace = z1_trace(b)
+
+incremental_join(join_fun, a, b) =
+    join_stream(join_fun, a, b)      +
+    join_trace(join_fun, a, b_trace) +
+    join_trace(join_fun_flipped, b, a_trace)
+```
+
+Where `z1_trace(x)` denotes an application of the [Z1Trace Operator](#299-z1trace-operator), `join_fun_flipped` flips the value arguments of `join_fun`, and `+` denotes the [Plus Operator](#2915-plus-operator).
+
+For example:
+```
+join_fun =
+    fn key, v1, v2 ->
+        {key, {v1, v2}}
+    end
+
+zset = [
+    {{:a, 0}, 0, 1},
+    {{:a, 0}, 0, -1},
+    {{:a, 1}, 0, 1},
+    {{:b, 2}, 0, 2},
+    {{:c, 2}, 0, 1}
+]
+
+trace = [
+    {:a, 1, 0, 1},
+    {:b, -3, 0, -1},
+    {:b, 3, 0, 1},
+    {:b, 4, 0, -1},
+    {:c, 4, 0, 1}
+]
+
+join_trace(join_fun, zset, trace) => [
+    {{:a, 1, 1}, nil, 1},
+    {{:b, 2, -3}, nil, -2},
+    {{:b, 2, 3}, nil, 2},
+    {{:b, 2, 4}, nil, -2},
+    {{:c, 2, 4}, nil, 1}
+]
+```
 
 ## 2.9.14 Minus Operator
 
