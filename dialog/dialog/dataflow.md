@@ -378,7 +378,87 @@ TODO: Decide whether the feedback operators belong alongside regular operators, 
 
 ## 2.9.11 DistinctTrace Operator
 
-Incremental version of Distinct (TODO separate this out?).
+(TODO Like with JoinStream and JoinTrace, it may make more sense to specify this alongside the Distinct operator as suggestions for incrementalizing it).
+
+A variant of [Distinct](#293-distinct-operator) that offers more performance for incremental computation and computes across multiple timestamps. It computes the distinct elements of a [ZSet](#21-zset) in its first argument, with respect to a [Trace](#23-trace) in its second, returning them in a new ZSet. The resulting ZSet has no timestamps associated with any element.
+
+Note that because operator computes the delta of [Distinct](#293-distinct-operator), it is possible for returned elements to have negative weights, if those elements are deleted between timestamps.
+
+Distinct is not a linear operation, and requires access to the entire history of updates, however there's a few observations that can reduce the search space of timestamps to examine.
+
+Consider evaluating the operator at some [timestamp](#25-timestamp) `t = (e, i)`, where `e` denotes the epoch, and `i` denotes the iteration.
+
+Then there are two possible classes of elements which may be returned:
+1) Elements in the current input ZSet
+2) Elements that were returned in response to a previous input, at timestamp `(e, i0)`, such that `i0 < i`, and where the element was also returned at timestamp `(e0, i)`, such that `e0 < e`
+
+For each element, with weight `w`, meeting at least one of the above requirements, if that element does not appear in the trace, it is returned in the ZSet with weight 1. Otherwise, the following routine is performed:
+
+1) `w1` is computed, as the sum of all weights in which that element appears at times `(e0, i0)` for `e0 < e` and `i0 < i`
+2) `w2` is computed, as the sum of all weights in which that element appears at times `(e0, i)` for `e0 < e`
+3) `w3` is computed, as the sum of all weights in which that element appears at times `(e, i0)` for `i0 < i`
+4) `d0` is computed, such that:
+   1) `d0 = 1`, if `w1 <= = && w1 + w2 > 0`
+   2) `d0 = -1`, if `w1 > 0 && w1 + w2 <= 0`
+   3) `d0 = 0`, otherwise
+5) `d1` is computed, such that:
+   1) `d1 = 1`, if `w1 + w3 <= 0 && w1 + w2 + w3 + w > 0`
+   2) `d1 = -1`, if `w1 + w3 > 0 && w1 + w3 + w4 <= 0`
+6) If `d1 - d0 != 0`, then the element is returned in the ZSet, with weight `d1 - d0`
+
+For example:
+
+```
+b00 = [
+    {0, {0, 0}, 1},
+    {2, {0, 0}, 1},
+    {3, {0, 0}, -1}
+]
+
+b01 = [
+    {5, {0, 1}, 1}
+]
+
+b10 = [
+    {5, {1, 0}, 1}
+]
+
+b11 = [
+    {0, {1, 1}, 1},
+    {1, {1, 1}, 1},
+    {2, {1, 1}, -1},
+    {3, {1, 1}, 1},
+    {4, {1, 1}, -1}
+]
+
+t00 = []
+t01 = insert_trace(t00, b00)
+t10 = insert_trace(t01, b01)
+t11 = insert_trace(t10, b10)
+
+# At time {0, 0}
+distinct_trace(b00, t00) => [
+    {0, nil, 1},
+    {2, nil, 1}
+]
+
+# At time {0, 1}
+distinct_trace(b01, t01) => [
+    {5, nil, 1}
+]
+
+# At time {1, 0}
+distinct_trace(b10, t10) => [
+    {5, nil, 1}
+]
+
+# At time {1, 1}
+distinct_trace(b11, t11) => [
+    {1, nil, 1},
+    {2, nil, -1},
+    {5, nil, -1}
+]
+```
 
 ## 2.9.12 JoinStream Operator
 
