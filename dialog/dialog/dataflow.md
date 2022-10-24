@@ -379,7 +379,7 @@ TODO: Decide whether the feedback operators belong alongside regular operators, 
 
 ## 2.9.11 Distinct Trace Operator
 
-(TODO Like with JoinStream and JoinTrace, it may make more sense to specify this alongside the Distinct operator as suggestions for incrementalizing it).
+(TODO Like with Join Stream and Join Trace, it may make more sense to specify this alongside the Distinct operator as suggestions for incrementalizing it).
 
 A variant of [Distinct](#293-distinct-operator) that offers more performance for incremental computation and computes across multiple timestamps, with support for use in nested contexts, like recursive circuits. It computes the distinct elements of a [ZSet](#21-zset) in its first argument, with respect to a [Trace](#23-trace) in its second, returning them in a new ZSet. The resulting ZSet has no timestamps associated with any element.
 
