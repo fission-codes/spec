@@ -1,4 +1,4 @@
-# Dialog Specification v0.1.0
+# Dialog Specification v0.1.0 (Draft)
 
 ## Editors
 
