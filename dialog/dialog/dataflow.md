@@ -15,7 +15,7 @@ This document provides a recommendation for implementing Dialog's query engine i
 
 # 1. Introduction
 
-Most Datalog runtimes implement a variant of semi-naive evaluation, where queries are run over the course of multiple iterations, with each iteration refining the result toward a fixed point. Such designs can efficiently compute views over a fixed EDB, but are insufficient for incrementaling evaluation over an EDB that changes over time.
+Most Datalog runtimes implement a variant of semi-naive evaluation, where queries are run over the course of multiple iterations, with each iteration refining the result toward a fixed point. Such designs can efficiently compute views over a fixed EDB, but are insufficient for incrementalizing evaluation over an EDB that changes over time.
 
 This document describes an alternative runtime, built on dataflow, which represents programs as circuits whose vertices and edges correspond to computations over streams of data. These circuits can be incrementalized to instead operate over deltas, with the results being combined back into a materialized view.
 
@@ -182,26 +182,26 @@ Emits data over a stream, without accepting any inputs from the circuit.
 
 An operator specifies an operation against a stream, and is represented by a node. Operators MAY be stateful, and linear operators are those which can be computed using only the deltas at the current timestamp.
 
-| Name                                                      | Linearity              | Input Types                                                 | Output Type  |
-| --------------------------------------------------------- | ---------------------- | ----------------------------------------------------------- | ------------ |
-| [Aggregate](#291-aggregate-operator)                      | Varies                 | Indexed ZSet                                                | ZSet         |
-| [Consolidate](#292-consolidate-operator)                  | Linear                 | Trace                                                       | ZSet         |
-| [Distinct](#293-distinct-operator)                        | Non-Linear             | ZSet                                                        | ZSet         |
-| [Filter](#294-filter-operator)                            | Linear                 | ZSet                                                        | ZSet         |
-| [IndexWith](#295-indexwith-operator)                      | Linear                 | ZSet                                                        | Indexed ZSet |
-| [Inspect](#296-inspect-operator)                          | Linear                 | ZSet                                                        | ZSet         |
-| [Map](#297-map-operator)                                  | Linear                 | ZSet                                                        | ZSet         |
-| [Negate](#298-negate-operator)                            | Linear                 | ZSet                                                        | ZSet         |
-| [Z1Trace](#299-z1trace-operator)                          | Linear                 | Trace                                                       | Trace        |
-| [Z1](#2910-z1-operator)                                   | Linear                 | ZSet                                                        | ZSet         |
-| [DistinctTrace](#2911-distincttrace-operator)             | Non-Linear             | ZSet, Trace                                                 | ZSet         |
-| [JoinStream](#2912-joinstream-operator)                   | Linear                 | Indexed ZSet, Indexed ZSet                                  | ZSet         |
-| [JoinTrace](#2913-jointrace-operator)                     | Bilinear               | Indexed ZSet, Trace                                         | ZSet         |
-| [Minus](#2914-minus-operator)                             | Linear                 | ZSet, ZSet (TODO: does this need to support indexed zsets?) | ZSet         |
-| [Plus](#2915-minus-operator)                              | Linear                 | ZSet, ZSet (TODO: does this need to support indexed zsets?) | ZSet         |
-| [TraceAppend](#2916-traceappend-operator)                 | Non-Linear (TODO ish?) | ZSet, Trace                                                 | Trace        |
-| [UntimedTraceAppend](#2917-untimedtraceappend-operator)   | Non-Linear (TODO ish?) | ZSet, Trace                                                 | Trace        |
-| [DistinctIncremental](#2918-distinctincremental-operator) | Non-Linear             | ZSet, Trace                                                 | ZSet         |
+| Name                                                       | Linearity                  | Input Types                                                 | Output Type  |
+| ---------------------------------------------------------- | -------------------------- | ----------------------------------------------------------- | ------------ |
+| [Aggregate](#291-aggregate-operator)                       | Varies                     | Indexed ZSet                                                | ZSet         |
+| [Consolidate](#292-consolidate-operator)                   | Linear                     | Trace                                                       | ZSet         |
+| [Distinct](#293-distinct-operator)                         | Non-Linear                 | ZSet                                                        | ZSet         |
+| [Filter](#294-filter-operator)                             | Linear                     | ZSet                                                        | ZSet         |
+| [Index With](#295-indexwith-operator)                      | Linear                     | ZSet                                                        | Indexed ZSet |
+| [Inspect](#296-inspect-operator)                           | Linear                     | ZSet                                                        | ZSet         |
+| [Map](#297-map-operator)                                   | Linear                     | ZSet                                                        | ZSet         |
+| [Negate](#298-negate-operator)                             | Linear                     | ZSet                                                        | ZSet         |
+| [Z1 Trace](#299-z1trace-operator)                          | Linear                     | Trace                                                       | Trace        |
+| [Z1](#2910-z1-operator)                                    | Linear                     | ZSet                                                        | ZSet         |
+| [Distinct Trace](#2911-distincttrace-operator)             | Non-Linear                 | ZSet, Trace                                                 | ZSet         |
+| [Join Stream](#2912-joinstream-operator)                   | Linear                     | Indexed ZSet, Indexed ZSet                                  | ZSet         |
+| [Join Trace](#2913-jointrace-operator)                     | Bilinear                   | Indexed ZSet, Trace                                         | ZSet         |
+| [Minus](#2914-minus-operator)                              | Linear                     | ZSet, ZSet (TODO: does this need to support indexed ZSets?) | ZSet         |
+| [Plus](#2915-minus-operator)                               | Linear                     | ZSet, ZSet (TODO: does this need to support indexed ZSets?) | ZSet         |
+| [Trace Append](#2916-traceappend-operator)                 | Non-Linear (TODO kind of?) | ZSet, Trace                                                 | Trace        |
+| [Untimed Trace Append](#2917-untimedtraceappend-operator)  | Non-Linear (TODO kind of?) | ZSet, Trace                                                 | Trace        |
+| [Distinct Incremental](#2918-distinctincremental-operator) | Non-Linear                 | ZSet, Trace                                                 | ZSet         |
 
 ## 2.9.1 Aggregate Operator
 
@@ -292,7 +292,7 @@ filter(predicate, [
 ]
 ```
 
-## 2.9.5 IndexWith Operator
+## 2.9.5 Index With Operator
 
 Groups elements of a [ZSet](#21-zset) according to some key function, returning an [Indexed ZSet](#22-indexed-zset).
 
@@ -365,7 +365,7 @@ negate([
 ]
 ```
 
-## 2.9.9 Z1Trace Operator
+## 2.9.9 Z1 Trace Operator
 
 Returns the previous input [trace](#23-trace).
 
@@ -377,7 +377,7 @@ Returns the previous input [ZSet](#21-zset).
 
 TODO: Decide whether the feedback operators belong alongside regular operators, or if they should be considered special, because they tend to be used in special feedback nodes that introduce cycles into the circuit.
 
-## 2.9.11 DistinctTrace Operator
+## 2.9.11 Distinct Trace Operator
 
 (TODO Like with JoinStream and JoinTrace, it may make more sense to specify this alongside the Distinct operator as suggestions for incrementalizing it).
 
@@ -461,7 +461,7 @@ distinct_trace(b11, t11) => [
 ]
 ```
 
-## 2.9.12 JoinStream Operator
+## 2.9.12 Join Stream Operator
 
 (TODO might not want this: this is a non-incremental join against streams, that only joins collections from the current timestamp)
 
@@ -493,15 +493,17 @@ join_stream(join_fun, a, b) => [
 ]
 ```
 
-## 2.9.13 JoinTrace Operator
+## 2.9.13 Join Trace Operator
 
 (TODO: improve this explanation. It probably makes more sense to instead describe non-incremental join, and then show how bilinearity leads to this incremental version)
 
 A variant of join that joins an [Indexed ZSet](#22-indexed-zset) with a [Trace](#23-trace). This takes advantage of the bilinearity of relational joins in order to support incremental joins across timestamps.
 
-Tt returns a ZSet containing the resulting elements, with no timestamps associated with each of those elements, and each element's weight given by the product of the two elements' weights that were joined together.
+It returns a ZSet containing the resulting elements, with no timestamps associated with each of those elements, and each element's weight given by the product of the two elements' weights that were joined together.
 
-It behaves similarly to [JoinStream](#2912-joinstream-operator), and the first argument represents deltas for the current timestamp, with the second being a trace containing all updates observed thus far. In this way, an incremental join can be implements as follows:
+It behaves similarly to [Join Stream](#2912-joinstream-operator), and the first argument represents deltas for the current timestamp, with the second being a trace containing all updates observed thus far. In this way, an incremental join can be implemented as follows:
+
+TODO: Describe the better implementation used in my prototype
 
 ```
 join_fun = ...
@@ -523,7 +525,7 @@ incremental_join(join_fun, a, b) =
     join_trace(join_fun_flipped, b, a_trace)
 ```
 
-Where `z1_trace(x)` denotes an application of the [Z1Trace Operator](#299-z1trace-operator), `join_fun_flipped` flips the value arguments of `join_fun`, and `+` denotes the [Plus Operator](#2915-plus-operator).
+Where `z1_trace(x)` denotes an application of the [Z1 Trace Operator](#299-z1trace-operator), `join_fun_flipped` flips the value arguments of `join_fun`, and `+` denotes the [Plus Operator](#2915-plus-operator).
 
 For example:
 ```
@@ -613,15 +615,15 @@ plus(a, b) => [
 ]
 ```
 
-## 2.9.16 TraceAppend Operator
+## 2.9.16 Trace Append Operator
 
 Inserts the input ZSet into the input Trace, with the current timestamp.
 
-## 2.9.17 UntimedTraceAppend Operator
+## 2.9.17 Untimed Trace Append Operator
 
 Inserts the input ZSet into the input Trace (TODO maybe not needed anymore).
 
-## 2.9.18 DistinctIncremental Operator
+## 2.9.18 Distinct Incremental Operator
 
 A variant of [Distinct](#293-distinct-operator) that offers more performance for incremental computation and computes across multiple timestamps. It computes the distinct elements of a [ZSet](#21-zset) in its first argument, with respect to a [Trace](#23-trace) in its second, returning them in a new ZSet. The resulting ZSet has no timestamps associated with any element.
 
