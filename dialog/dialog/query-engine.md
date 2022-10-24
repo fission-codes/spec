@@ -160,7 +160,7 @@ checkbox(Id, false)@next :- checkbox(Id, true), clicks(Id).
 
 This rule has three heads which together relate the current state of the checkbox to its state in the next timestamp. The first handles the case where no click has occurred, by simply copying the current state forward in time, whereas the next two handle a click event by flipping the checkbox's state at the next timestamp.
 
-Note that while this rule depends negatively on itself, it's able to do so safely because the timestamp of the head is larger than the timestamps of the atoms in the body, modularly stratifying the program with respect to time.
+Note that while this rule depends negatively on itself, it's able to do so safely because the timestamp of the head is larger than the timestamps of the atoms in the body, stratifying the program with respect to time.
 
 ## 1.3.2 Content Addressing
 
@@ -184,9 +184,9 @@ categoryCount(Category, Count) :-
 
 In this example, the CID of each tuple in the `category` relation acts as its primary key, and is suitable for use as a foreign key when joining against this relation for aggregation purposes.
 
-The choice of CIDs here rather than more common choices, like autoincrementing IDs or UUIDs, reflects Dialog's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
+The choice of CIDs here rather than more common choices, like auto incrementing IDs or UUIDs, reflects Dialog's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
 
-Since content addressing schemes are backed by cryptograpically secure hash functions, their use here prevents forgery of IDs by attackers, and guarantees that CID-based dependencies between tuples will be acyclic.
+Since content addressing schemes are backed by cryptographically secure hash functions, their use here prevents forgery of IDs by attackers, and guarantees that CID-based dependencies between tuples will be acyclic.
 
 These properties are further leveraged in the design and use of byzantine-fault tolerant CRDTs, as described in [CRDTs](./CRDTs.md).
 
@@ -210,13 +210,13 @@ A program may have multiple valid stratifications, if one exists, but the choice
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
 4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to the modular stratification over time discussed in [section 1.3.1](#131-time), and these rules MAY be implemented using [sinks](#136-sinks)
 
-Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered unstratisfiable, and cannot be represented using Dialog.
+Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using Dialog.
 
 ## 1.3.4 Evaluation
 
 Evaluation of Dialog proceeds in [timesteps](#131-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#133-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
-Each epoch is denoted by the timestmap succeeding the last, and begins by evaluating the program's [sources](#135-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
+Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#135-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
 
 Upon evaluating all strata to a fixed point, the program's [sinks](#136-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
 
@@ -293,7 +293,7 @@ Aggregation ::=
   | Var := <UserDefinedAggFun> Var* : Atom
 ```
 
-Dialog's aggregation predicates compute a summary value over a relation for some set of variable bindings, called the grouping variables. This summary value is bound to the given variable. If this unifification fails, or if the aggregate function returns no result, then the search fails.
+Dialog's aggregation predicates compute a summary value over a relation for some set of variable bindings, called the grouping variables. This summary value is bound to the given variable. If this unification fails, or if the aggregate function returns no result, then the search fails.
 
 Some aggregates, like `sum`, are parameterized over variables which are used to select components of the matched tuples, for aggregation purposes. Such parameters MUST be otherwise unbound, and MUST only appear once within the aggregated atom's arguments.
 
@@ -323,7 +323,7 @@ totalStock(Category, Total) :-
 
 Implementations are RECOMMENDED to support `count`, `sum`, `min`, and `max` as aggregates, but MAY provide additional built-in aggregates or allow user defined aggregate functions.
 
-If implementated, these aggregates MUST be defined as follows:
+If implemented, these aggregates MUST be defined as follows:
 - `count` MUST return the number of matched tuples
 - `sum` MUST return the sum of the selected argument in the matched tuples
 - `min` MUST return the minimum of the selected argument in the matched tuples
@@ -398,6 +398,6 @@ Implementations MAY also support user defined sources, such as to facilitate the
 
 Sinks process derived tuples at the end of each epoch.
 
-Implementations MAY define their own sinks, but sinks shuld be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
+Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
 Implementations MAY also support user defined sinks, such as to facilitate the integration of Dialog into external systems for persistency or communication.
