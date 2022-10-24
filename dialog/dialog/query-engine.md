@@ -35,6 +35,8 @@ The allowed types are defined in [section 1.2](#types).
 
 ### Atoms
 
+TODO: We actually want named fields.
+
 Atoms are tagged tuples of the form:
 
 ```datalog
