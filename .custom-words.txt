@@ -110,7 +110,7 @@ ln
 mTLS
 memoization
 optimality
-persistency
+persistence
 preorder
 probabilistically
 requestor
