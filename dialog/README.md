@@ -14,6 +14,7 @@
 
 * [Dataflow Runtime](./dialog/dataflow.md)
 * [Query Engine](./dialog/query-engine.md)
+* [Relational Algebra](./dialog/relational-algebra.md)
 
 ## Appendices
 
