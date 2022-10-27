@@ -19,7 +19,7 @@ Relational algebra is the theory underpinning relational databases, and query la
 
 In the context of Dialog, the relational algebra serves two purposes:
 1) Providing a small core language for further compilation to a runtime with support for recursive queries
-2) Serving as a common intermediate representation for both queries written using familiar SQL-inspired syntaxes, and for those written using [richer, higher-level languages, like Dialog](../dialog/query-engine.md).
+2) Serving as a common intermediate representation for both queries written using familiar SQL-inspired DSLs, and for those written using [richer, higher-level languages, like Dialog](../dialog/query-engine.md).
 
 # 2. Concepts
 
@@ -46,7 +46,7 @@ All operators take some number of relations as input, transforming them into an 
 | Name                                       | Linearity  | Arity |
 | ------------------------------------------ | ---------- | ----- |
 | [Projection](#31-projection)               | Linear     | 1     |
-| [Rename](#32-rename)                       | Linaer     | 1     |
+| [Rename](#32-rename)                       | Linear     | 1     |
 | [Selection](#33-selection)                 | Linear     | 1     |
 | [Union](#34-union)                         | Linear     | N-ary |
 | [Difference](#35-difference)               | Non-Linear | 1     |
@@ -379,7 +379,12 @@ products = [
     (product_id: 4, product_category_id: 2, product_stock: 7)
 ]
 
-group_by(product_category_id, total_stock, sum(product_stock), products) => [
+group_by(
+    product_category_id,
+    total_stock,
+    sum(product_stock),
+    products
+) => [
     (product_category_id: 1, total_stock: 8),
     (product_category_id: 2, total_stock: 19),
 ]
