@@ -23,6 +23,7 @@ DNSLink
 DSL
 DSync
 EDB
+EVAC
 Encryptions
 FPP
 Filecoin
