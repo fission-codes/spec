@@ -35,17 +35,15 @@ The allowed types are defined in [section 1.2](#types).
 
 ### Atoms
 
-TODO: We actually want named fields.
-
 Atoms are tagged tuples of the form:
 
 ```datalog
-foo(a1, a2, ..., an)
+foo(a1: v1, a2: v2, ..., an: vn)
 ```
 
-Where `foo` is the name of the atom, and `a1, a2, ..., an` are its arguments. The arguments to an atom can be any [term](#terms), and an atom whose arguments are all constants is called a ground atom.
+Where `foo` is the name of the atom, `a1, a2, ..., an` are its attribute names, and `v1, v2, ..., vn` are the values of those attributes. The values in an atom's attributes can be any [term](#terms), and an atom whose attributes all have constant values is called a ground atom.
 
-For example, `point(3, 7)` is a ground atom named `point` with two arguments, `3` and `7`. Similarly, `point(X, Y)` is a non-ground atom with two variable arguments, `X` and `Y`.
+For example, `point(x: 3, y: 7)` is a ground atom named `point` with two attributes, `x` with value `3` and `y` with value `7`. Similarly, `point(x: X, y: Y)` is a non-ground atom with two variable attributes, `x` and `y`.
 
 An instance of a ground atom is often referred to as a tuple for brevity, and the collection of all tuples with a given name is called a relation.
 
@@ -55,7 +53,7 @@ Using standard Datalog terminology, Dialog operates over two databases: the exte
 
 The extensional database refers to the source database containing the ground tuples which act as inputs to a program. Similarly, the intensional database refers to the ground tuples which are derived using the rules in a program, `P`.
 
-Connecting both concepts is the Herbrand base of `P`, containing all ground tuples in either the EDB or IDB:
+Connecting both concepts is the Herbrand base of `P`, written `B(P)`, containing all ground tuples in either the EDB or IDB:
 
 ```
 B(P) = EDB ∪ IDB(P)
@@ -71,23 +69,23 @@ A :− B1, B2, ..., Bn.
 
 Where `A` is an [atom](#atoms) that forms the head of the rule, and `B1, B2, ..., Bn` are [predicates](#predicates) that make up its body. Such a rule can be understood to mean that an instance of `A` should be added to the database if all of the predicates given by `B` through `Z` are true.
 
-The head of a rule may contain variables, in which case a successful application of the rule's body will instantiate them with constants. For example, the following rule projects the first argument of all instances of the `point` relation, to produce matching `xCoordinate` tuples:
+The head of a rule may contain variables, in which case a successful application of the rule's body will instantiate them with constants. For example, the following rule projects the `x` attribute of all instances of the `point` relation, to produce matching `xCoordinate` tuples:
 
 ```datalog
-xCoordinate(X) :− point(X, Y).
+xCoordinate(x: X) :− point(x: X, y: Y).
 ```
 
-Such a rule can also be written using wildcards in the place of unused variables:
+Such a rule can also be written without reference to any unused attributes:
 
 ```datalog
-xCoordinate(X) :− point(X, _).
+xCoordinate(x: X) :− point(x: X).
 ```
 
-Rules may also have multiple heads, each with their own body. The following rule is defined using two heads which together compute `zeroPoint` tuples with either their first or second argument being `0`:
+Rules may also have multiple heads, each with their own body. The following rule is defined using two heads which together compute `zeroPoint` tuples with either their `x` or `y` attribute being `0`:
 
 ```datalog
-zeroPoint(0, Y) :− point(0, Y).
-zeroPoint(X, 0) :− point(X, 0).
+zeroPoint(x: 0, y: Y) :− point(x: 0, y: Y).
+zeroPoint(x: X, y: 0) :− point(x: X, y: 0).
 ```
 
 Rules MUST be range restricted: all variables in the head must appear within the body as part of a [selection predicate](#predicates).
@@ -95,7 +93,7 @@ Rules MUST be range restricted: all variables in the head must appear within the
 All rules discussed so far are examples of deductive rules. Similarly inductive rules are defined by suffixing a rule's head with `@next`:
 
 ```datalog
-zeroPoint(X, Y)@next :− zeroPoint(X, Y).
+zeroPoint(x: X, y: Y)@next :− zeroPoint(x: X, y: Y).
 ```
 
 This causes the rule to delay derived tuples until the next timestep. For more information, see [section 1.3.2](#131-time).
@@ -107,13 +105,13 @@ A [rule's](#rules) body may contain a number of different predicates that determ
 For example, the following program filters social media profiles to select those with at least 1000 followers:
 
 ```datalog
-popularProfile(X) :−
-    profile(X),
-    c := count : follower(X, _),
+popularProfile(id: X) :−
+    profile(id: X),
+    c := count : follower(follows: X),
     c >= 1000.
 ```
 
-Here, `c` is bound to the count of `follower` tuples whose first argument matches `X`. The result is then constrained to only those variable bindings whose associated counts are greater than 1000.
+Here, `c` is bound to the count of `follower` tuples whose `follows` attribute matches `X`. The result is then constrained to only those variable bindings whose associated counts are greater than 1000.
 
 Detailed descriptions of built-in predicates is provided in [section 1.3.5](#135-predicates).
 
@@ -153,9 +151,9 @@ Treating time in this way is what allows Dialog to support both transient tuples
 For example, given a relation `clicks` whose tuples denote a user clicking on a UI element during the current timestamp, a user interface containing a checkbox might be modeled like so:
 
 ```datalog
-checkbox(Id, S)@next     :- checkbox(Id, S), !clicks(Id).
-checkbox(Id, true)@next  :- checkbox(Id, false), clicks(Id).
-checkbox(Id, false)@next :- checkbox(Id, true), clicks(Id).
+checkbox(id: Id, state: S)@next     :- checkbox(id: Id, state: S), !clicks(id: Id).
+checkbox(id: Id, state: true)@next  :- checkbox(id: Id, state: false), clicks(id: Id).
+checkbox(id: Id, state: false)@next :- checkbox(id: Id, state: true), clicks(id: Id).
 ```
 
 This rule has three heads which together relate the current state of the checkbox to its state in the next timestamp. The first handles the case where no click has occurred, by simply copying the current state forward in time, whereas the next two handle a click event by flipping the checkbox's state at the next timestamp.
@@ -166,10 +164,12 @@ Note that while this rule depends negatively on itself, it's able to do so safel
 
 As Dialog is intended for use in distributed and decentralized deployments, it is important ensure the use of collision resistant identifiers when referring to tuples. For this purpose, a content addressing scheme is leveraged, wherein facts are associated with a content ID (CID) computed from their structure. The details behind this computation are available in [serialization](./serialization.md).
 
+(Note: this may not actually be the right way of thinking about this, because in many cases, these CIDs are for tuples derived from the EVAC tuples in IPFS, rather than the EVAC tuples themselves. Instead we might also want to accumulate the provenance of variables across joins, and expose a predicate that queries over that provenance. This provenance tracking might even happen conditionally, based on whether it's needed by the program)
+
 This CID is accessed through the selection predicate, which can optionally unify a tuple's CID with a variable:
 
 ```datalog
-C := point(X, Y)
+C := point(x: X, y: Y)
 ```
 
 In this way, these CIDs can be exposed to rules for use in joins between relations, or in the derivation of new tuples.
@@ -177,14 +177,14 @@ In this way, these CIDs can be exposed to rules for use in joins between relatio
 For example, the following rule operates over an EDB containing tuples which describe the product offerings of an e-commerce site, and computes the number of products belonging to each category:
 
 ```datalog
-categoryCount(Category, Count) :-
-    Category := category(...),
-    Count := count : product(Category, ...).
+categoryCount(category: Category, count: Count) :-
+    Category := category(),
+    Count := count : product(category: Category).
 ```
 
 In this example, the CID of each tuple in the `category` relation acts as its primary key, and is suitable for use as a foreign key when joining against this relation for aggregation purposes.
 
-The choice of CIDs here rather than more common choices, like auto incrementing IDs or UUIDs, reflects Dialog's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
+The choice of CIDs here, rather than more common choices, like auto incrementing IDs or UUIDs, reflects Dialog's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
 
 Since content addressing schemes are backed by cryptographically secure hash functions, their use here prevents forgery of IDs by attackers, and guarantees that CID-based dependencies between tuples will be acyclic.
 
@@ -239,7 +239,7 @@ Selection ::=
   | Var := Atom
 ```
 
-In both cases, the predicate selects tuples from the relation given by the atom, unifying their arguments against the atom's arguments: unbound arguments will be bound to their corresponding values in the tuple, and bound arguments will filter the selection to include only tuples with matching values.
+In both cases, the predicate selects tuples from the relation given by the atom, unifying their attributes against the atom's attributes: unbound variables will be bound to the corresponding value in the tuple, and bound variables will filter the selection to include only tuples with matching values.
 
 The second form additionally unifies the [CID](#132-content-addressing) of the selected tuple with the given variable. If this variable has already been bound, then the selection is filtered to only include the tuple with the bound CID.
 
@@ -249,37 +249,37 @@ The second form additionally unifies the [CID](#132-content-addressing) of the s
 Negation ::= !Atom
 ```
 
-Dialog implements stratified negation, and the negation predicate filters for variable bindings which do not result in any tuples being selected. This predicate MUST be evaluated after all of the variables in the atom's arguments are bound, and it causes the search to fail if it discovers any matching tuples.
+Dialog implements stratified negation, and the negation predicate filters for variable bindings which do not result in any tuples being selected. This predicate MUST be evaluated after all of the variables in the atom's attributes are bound, and it causes the search to fail if it discovers any matching tuples.
 
 For example, the following program computes meal suggestions for pairs of people, such that one person likes the suggestion, and neither dislikes it:
 
 ```datalog
-suggestedMeal(PersonA, PersonB, Food) :-
-  person(personA),
-  person(personB),
+suggestedMeal(person1: PersonA, person2: PersonB, meal: Food) :-
+  person(name: personA),
+  person(name: personB),
   personA != personB,
-  likes(personA, Food),
-  !dislikes(personB, Food)
+  likes(name: personA, food: Food),
+  !dislikes(name: personB, food: Food)
 ```
 
 Given an EDB containing:
 ```datalog
-person("Quinn")
-person("Brooke")
+person(name: "Quinn")
+person(name: "Brooke")
 
-likes("Quinn", "Ramen")
-likes("Brooke", "Vegan")
-likes("Brooke", "Schnitzel")
+likes(name: "Quinn", food: "Ramen")
+likes(name: "Brooke", food: "Vegan")
+likes(name: "Brooke", food: "Schnitzel")
 
-dislikes("Quinn", "Vegan")
-dislikes("Brooke", "Mushrooms")
+dislikes(name: "Quinn", food: "Vegan")
+dislikes(name: "Brooke", food: "Mushrooms")
 ```
 
 The derived tuples are:
 
 ```datalog
-suggestedMeal("Quinn", "Brooke", "Ramen")
-suggestedMeal("Brooke, "Quinn", "Schnitzel")
+suggestedMeal(person1: "Quinn", person2: "Brooke", meal: "Ramen")
+suggestedMeal(person1: "Brooke, person2: "Quinn", meal: "Schnitzel")
 ```
 
 ### Aggregation
@@ -293,32 +293,32 @@ Aggregation ::=
   | Var := <UserDefinedAggFun> Var* : Atom
 ```
 
-Dialog's aggregation predicates compute a summary value over a relation for some set of variable bindings, called the grouping variables. This summary value is bound to the given variable. If this unification fails, or if the aggregate function returns no result, then the search fails.
+Dialog's aggregation predicates compute a summary value over a relation for some set of attribute bindings, called the grouping attributes. This summary value is bound to the given variable. If this unification fails, or if the aggregate function returns no result, then the search fails.
 
-Some aggregates, like `sum`, are parameterized over variables which are used to select components of the matched tuples, for aggregation purposes. Such parameters MUST be otherwise unbound, and MUST only appear once within the aggregated atom's arguments.
+Some aggregates, like `sum`, are parameterized over variables which are used to select components of the matched tuples, for aggregation purposes. Such parameters MUST be otherwise unbound, and MUST only appear once within the aggregated atom's attributes.
 
 For example, the following rule is valid:
 
 ```datalog
-totalStock(Total) :- Total := sum Quantity : product(Name, Category, Quantity).
+totalStock(total: Total) :- Total := sum Quantity : product(category: Category, quantity: Quantity).
 ```
 
 But the following is not:
 
 ```datalog
-totalStock(Total) :-
-  product(Name, Category, Quantity),
-  Total := sum Quantity : product(_, _, Quantity).
+totalStock(total: Total) :-
+  product(name: Name, category: Category, quantity: Quantity),
+  Total := sum Quantity : product(quantity: Quantity).
 ```
 
-Grouping variables are used to compute a summary for every possible assignment to the grouping variables.
+Grouping attributes are used to compute a summary for every possible assignment to the grouping attributes.
 
 For example, the following rule extends the previous valid example to compute the total stock per category of products:
 
 ```datalog
-totalStock(Category, Total) :-
-  productCategory(Category),
-  Total :- sum Quantity : product(_, Category, Quantity).
+totalStock(category: Category, total: Total) :-
+  product(category: Category),
+  Total := sum Quantity : product(category: Category, quantity: Quantity).
 ```
 
 Implementations are RECOMMENDED to support `count`, `sum`, `min`, and `max` as aggregates, but MAY provide additional built-in aggregates or allow user defined aggregate functions.
@@ -334,7 +334,7 @@ The argument's to an aggregate's atom form a lexical scope under the rule's body
 For example, the following rule is not range restricted, and thus invalid, because `Category` is unbound in the rule's head:
 
 ```datalog
-totalStock(Category, Total) :- Total :- sum Quantity product(_, Category, Quantity).
+totalStock(category: Category, total: Total) :- Total := sum Quantity product(category: Category, quantity: Quantity).
 ```
 
 Implementations are RECOMMENDED to implement aggregate functions as linear operations, wherever possible. Such functions can be implemented efficiently in terms of incremental operations over deltas.
@@ -356,32 +356,32 @@ Constraints serve to filter a rule's derived tuples, and their definition follow
 For example, given the following EDB:
 
 ```datalog
-point(0, 0)
-point(0, 1)
-point(0, 2)
-point(1, 0)
-point(1, 1)
-point(1, 2)
-point(2, 0)
-point(2, 1)
-point(2, 2)
+point(x: 0, y: 0)
+point(x: 0, y: 1)
+point(x: 0, y: 2)
+point(x: 1, y: 0)
+point(x: 1, y: 1)
+point(x: 1, y: 2)
+point(x: 2, y: 0)
+point(x: 2, y: 1)
+point(x: 2, y: 2)
 ```
 
 And the following rule:
 
 ```datalog
-diagonal(X, Y) :- point(X, Y), X <= Y.
+diagonal(x: X, y: Y) :- point(x: X, y: Y), X <= Y.
 ```
 
 The following tuples are derived:
 
 ```datalog
-diagonal(0, 0)
-diagonal(0, 1)
-diagonal(0, 2)
-diagonal(1, 1)
-diagonal(1, 2)
-diagonal(2, 2)
+diagonal(x: 0, y: 0)
+diagonal(x: 0, y: 1)
+diagonal(x: 0, y: 2)
+diagonal(x: 1, y: 1)
+diagonal(x: 1, y: 2)
+diagonal(x: 2, y: 2)
 ```
 
 ## 1.3.5 Sources
@@ -400,4 +400,4 @@ Sinks process derived tuples at the end of each epoch.
 
 Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
-Implementations MAY also support user defined sinks, such as to facilitate the integration of Dialog into external systems for persistency or communication.
+Implementations MAY also support user defined sinks, such as to facilitate the integration of Dialog into external systems for persistence or communication.
