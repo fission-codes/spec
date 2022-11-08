@@ -52,3 +52,26 @@ TODO: discuss CRDTs / BFT-CRDTs
 TODO: discuss location independence
 
 TODO: discuss CALM Theorem and its connection with Datalog
+
+# 2. Design
+
+Dialog can be broken up into two core components: the query engine, and its storage layer.
+
+## 2.1 Query Engine
+Dialog has no specified query language. Instead, an intermediate representation based on the [relational algebra](../dialog/dialog/relational-algebra.md) is defined.
+
+An OPTIONAL [Datalog variant](../dialog/dialog/query-engine.md) is described, along with an [algorithm](../dialog/dialog/relational-algebra.md#5-compilation-from-dialog) for translating it to the relational algebra IR.
+
+Implementations MAY define their own user-facing query language, but they are RECOMMENDED to treat the relational algebra IR as a common compilation target for all such languages.
+
+TODO: "relational algebra IR" is wordy. We should just give these layers names. Maybe PomoLogic -> PomoRA -> PomoFlow?
+
+TODO: Talk about compiling SQL to PomoRA too. That should probably be another linked spec, but I should tackle one thing at a time.
+
+This IR is then compiled to a form suitable for being evaluated by an implementation-defined runtime. An OPTIONAL [dataflow runtime](../dialog/dialog/dataflow.md) is described, but implementations MAY implement a simpler runtime, based on semi-naive evaluation.
+
+TODO: Should we describe a simple specification for semi-naive evaluation yet, or just link to some resources? We'll definitely want to specify that too, at some point, but I'd prefer specifying one target to start, so we can launch sooner.
+
+## 2.2 Storage
+
+TODO: Introduce + link Brooke's upcoming work on persistence + encryption
