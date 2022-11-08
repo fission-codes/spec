@@ -420,3 +420,70 @@ select(formula, users) => [
     (id: 4, region: "South America", accepted_cookies: false)
 ]
 ```
+
+# 5. Compilation from Dialog
+
+TODO: I realize this is very verbose and that it can be simplified and broken up. I'll worry about that after the first pass through describing things :)
+
+## 5.1 Non-Recursive Dialog
+
+The translation from non-recursive [Dialog](../dialog/query-engine.md) to a relational algebra query plan is straightforward, and can be performed by first compiling each rule in isolation, and then taking the [union](#34-union) of the query plans for any rules with matching head atoms.
+
+A rule is compiled by constructing a query plan from the terms within the rule's body, with respect to the rule's head. Such query plans are not unique, and implementations MAY define their own approach to query planning, but the semantics of the generated query plan MUST match the query plan generated using the following approach.
+
+First, for each unique variable, `var`, used in the rule's body, associate it with a unique name, `name(var)`. This name MUST NOT collide with any attributes on relations referenced by the rule.
+
+For example, given variables `x`, `y`, and `z`:
+ - `name(x) => "var0"`
+ - `name(y) => "var1"`
+ - `name(z) => "var2"`
+
+Next, partition the predicates in the rule's body into four sets: `selections`, `aggregations`, `negations`, and `constraints`, each containing the terms of the respective predicate type.
+
+Now, for each predicate in `selections`, we have two cases:
+- `atom(a0: v0, ..., an: vn)`
+- `Var := atom(a0: v0, ..., an: vn)`
+
+In both cases, start by generating a [projection](#31-projection) operation against `atom`, for the attributes `a0, ..., an`. In the second case, additionally project against the control column `$CID`. Denote this operation by `source`.
+
+Then, for all attributes `a`, with value `v`, and `v` being a constant, generate a [propositional formula](#4-propositional-formula) made up of the conjunction of all such attributes being compared for equality against their associated value. If this formula contains any terms, then generate a [selection](#33-selection) against `source`, that filters by this formula, and denote the resulting relation by `source`.
+
+Now, for all attributes `a`, with value `v`, and `v` being a variable, if this set is non-empty, then generate a [rename](#32-rename) operation against `source`, that renames every attribute `a` to `name(v)`. If the CID of the relation is being bound to a variable, `var`, additionally rename `$CID` to `name(var)`. Store the resulting relation in a set denoted by `sources`.
+
+Next, fold over the relations in `sources`, using the first relation as the initial accumulator. For each pair of relations considered, `left` and `right`, there are three possibilities:
+1) `left` and `right` share no common attributes
+   - Return the [cartesian product](#36-cartesian-product) of `left` and `right` as the new accumulator
+2) The attributes of `right` are fully contained in the attributes of `left` (or the reverse is true)
+    - Return the [semijoin](#310-semijoin) of `left` and `right` as the new accumulator
+3) `left` and `right` share some common attributes
+    - Return the [natural join](#37-natural-join) of `left` and `right` as the new accumulator
+
+At the end of this process, the fold will have returned a relation corresponding to the joining of all positive terms in the rule's body. Denote that relation `rule_body`.
+
+Then, compile `constraints` to a single [propositional formula](#4-propositional-formula), `prop_constraints`, made up of the conjunction of all constraints, such that all variables, `var`, are replaced with `name(var)`.
+
+For example:
+ - `[x <= 5] => name(x) <= 5`
+ - `[x <= y, y = 5] => name(x) <= name(y) AND name(y) = 5`
+
+ If `prop_constraints` is non-empty, then generate a [selection](#33-selection) against `rule_body` using `prop_constraints` as its formula. Denote the resulting relation as the new `rule_body`.
+
+ Now, for each predicate in `negations`, `!atom(a0: v0, ..., an: vn)`, start by generating a [projection](#31-projection) operation against `atom`, for the attributes `a0, ..., an`. Denote the resulting relation as `negated_relation`.
+
+ Then, for all attributes `a`, with value `v`, and `v` being a constant, generate a [propositional formula](#4-propositional-formula) made up of the conjunction of all such attributes being compared for equality against their associated value. If this formula contains any terms, then generate a [selection](#33-selection) against `negation`, that filters by this formula, and denote the resulting relation by `negated_relation`.
+
+ Now, for all attributes `a`, with value `v`, and `v` being a variable, if this set is non-empty, then generate a [rename](#32-rename) operation against `negated_relation`, that renames every attribute `a` to `name(v)`. Store the resulting relation in a set denoted by `negated_relations`.
+
+Next, fold over the relations in `negated_relations`, using `rule_body` as the initial accumulator. For each pair of relations considered, `negated_relation` and `accumulator`, return an [antijoin](#311-antijoin) between `accumulator` and `negated_relation` as the new accumulator.
+
+At the end of this process, the fold will have returned a relation corresponding to the joining of all positive terms in the rule's body, the selection of any constraints, along with the negation of all negative terms in the rule's body. Denote that relation `rule_body`.
+
+TODO: aggregation
+
+Next, from the rule's head, `atom(a0: v0, ..., an: vn)`, collect each attribute, `a`, with value `v`, and `v` being a variable, and generate a [rename](#32-rename) operation against `rule_body`, that renames every attribute `name(v)` to `a`. The resulting relation will contain the output for the rule.
+
+Now, taking the [union](#34-union) of all rules which share a head relation will give the query plan for that relation.
+
+Lastly, [stratify](../dialog/query-engine.md#133-stratification) each of these relations and partition the query plans by the strata they belong to.
+
+TODO: add diagrams + examples for each of these steps
