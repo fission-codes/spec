@@ -52,9 +52,13 @@ OOM
 PSU
 Philipp
 PomoDB
+PomoDB's
 PomoRA
+PomoRA's
 PomoFlow
+PomoFlow's
 PomoLogic
+PomoLogic's
 Prolog
 Qri's
 Ramen

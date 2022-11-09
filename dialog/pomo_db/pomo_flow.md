@@ -1,4 +1,4 @@
-# Dataflow Runtime
+# PomoFlow
 
 ## Authors
 
@@ -11,7 +11,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # Abstract
 
-This document provides a recommendation for implementing Dialog's query engine in terms of a dataflow based runtime. This design is especially suited for incrementalizing programs to efficiently compute over deltas to the input EDB.
+This document describes PomoFlow, a dataflow runtime for PomoDB. This design is especially suited for incrementalizing programs to efficiently compute over deltas to the input EDB.
 
 # 1. Introduction
 
@@ -19,7 +19,7 @@ Most Datalog runtimes implement a variant of semi-naive evaluation, where querie
 
 This document describes an alternative runtime, built on dataflow, which represents programs as circuits whose vertices and edges correspond to computations over streams of data. These circuits can be incrementalized to instead operate over deltas, with the results being combined back into a materialized view.
 
-Since the stream computations correspond to the relational algebra, compiling to these circuits from Datalog (and thus Dialog) is simple, and is also described in this document.
+Since the stream computations correspond to the relational algebra, compiling to these circuits from PomoRA is simple, and is also described in this document.
 
 The design is based on ideas from Differential Dataflow, and is heavily inspired by the Database Stream Processor Framework (DBSP). Links to both can be found in the [research appendices](./RESEARCH.md).
 
@@ -115,7 +115,7 @@ Under this example, using product order, `(0, 0) <= (0, 1) <= (1, 1)`, but neith
 
 ## 2.6 Circuit
 
-A circuit is an embedding of a Dialog program into a directed graph whose vertices, called [nodes](#28-node), represent computation against [streams](#27-stream), and whose edges describe those streams.
+A circuit is an embedding of a PomoRA query plan into a directed graph whose vertices, called [nodes](#28-node), represent computation against [streams](#27-stream), and whose edges describe those streams.
 
 Circuits may contain subcircuits, representing recursive subcomputations that evaluate to a fixed point every iteration.
 
@@ -211,7 +211,7 @@ This operator takes an [Indexed ZSet](#22-indexed-zset) as input, and applies an
 
 (TODO: maybe it should use the circuit's current timestamp. I need to do some experimentation with timestamps because I think I can simplify the model slightly)
 
-Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the [specification for the query language](query-engine.md#aggregation).
+Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the [specification for the query language](pomo_logic.md#aggregation).
 
 If additional aggregates are supported, they MUST be pure functions, and implementations are RECOMMENDED to enforce this constraint.
 

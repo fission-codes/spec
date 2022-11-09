@@ -1,4 +1,4 @@
-# Relational Algebra
+# PomoRA
 
 ## Authors
 
@@ -11,15 +11,15 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # Abstract
 
-The relational algebra forms a common compilation target for Datalog programs. This specification outlines the semantics of the algebra, and describes its operations in terms useful for further compilation to a model with support for incrementalization and recursive queries.
+The relational algebra forms a common compilation target for Datalog programs. This specification outlines the semantics of PomoRA, a representation of the relational algebra designed for use as a compilation target for high-level PomoDB query languages. It also describes PomoRA's operations in terms useful for further compilation to a runtime with support for incrementalization and recursive query processing.
 
 # 1. Introduction
 
-Relational algebra is the theory underpinning relational databases, and query languages against them. Like Datalog, it operates over relations as input, and produces relations as output. Unlike Datalog, it is unable to directly express recursive queries, and such programs must be implemented in terms of a more expressive model, such as one built on [dataflow](dataflow.md).
+Relational algebra is the theory underpinning relational databases, and query languages against them. Like Datalog, it operates over relations as input, and produces relations as output. Unlike Datalog, it is unable to directly express recursive queries, and such programs must be implemented in terms of a more powerful runtime, such as [PomoFlow](pomo_flow.md).
 
-In the context of Dialog, the relational algebra serves two purposes:
-1) Providing a small core language for further compilation to a runtime with support for recursive queries
-2) Serving as a common intermediate representation for both queries written using familiar SQL-inspired DSLs, and for those written using [richer, higher-level languages, like Dialog](../dialog/query-engine.md).
+In the context of PomoDB, the relational algebra serves two purposes:
+1) Providing a small core language for further compilation to a runtime with support for recursive query processing
+2) Serving as a common intermediate representation for both queries written using familiar SQL-inspired DSLs, and for those written using richer, higher-level languages, like [PomoLogic](pomo_logic.md).
 
 # 2. Concepts
 
@@ -35,7 +35,7 @@ A n-ary relation contains n-tuples, which can each be written:
 
 Where `a1, a2, ..., an` give the names of each attribute, and `v1, v2, ..., vn` their values.
 
-Each tuple within a relation also has a content identifier (CID), as described in the specification of the [query engine](../dialog/query-engine.md#132-content-addressing). This CID can be accessed through a special control attribute that this document will denote as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
+Each tuple within a relation also has a content identifier (CID), as described in the specification for [PomoLogic](pomo_logic.md#132-content-addressing). This CID can be accessed through a special control attribute that this document will denote as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
 
 # 3. Operations
 
@@ -367,7 +367,9 @@ This operation is equivalent to taking the [difference](#35-difference) of the f
 
 Group by is the mechanism by which aggregation is performed. Group by is performed over a relation with respect to a set of grouping attributes, and an aggregate function. The operation returns the set of tuples computed by first grouping the input relation, and then applying the aggregate function to each group.
 
-Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the [specification for the query language](query-engine.md#aggregation).
+TODO: Move the specification of aggregates from PomoLogic to here
+
+Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the specification for [PomoLogic](pomo_logic.md#aggregation).
 
 For example:
 
@@ -421,13 +423,13 @@ select(formula, users) => [
 ]
 ```
 
-# 5. Compilation from Dialog
+# 5. Compilation from PomoLogic
 
 TODO: I realize this is very verbose and that it can be simplified and broken up. I'll worry about that after the first pass through describing things :)
 
-## 5.1 Non-Recursive Dialog
+TODO: I need to move some details from PomoLogic to here, so that PomoRA can reuse ideas like provenance, CIDs, time, and stratification
 
-The translation from non-recursive [Dialog](../dialog/query-engine.md) to a relational algebra query plan is straightforward, and can be performed by first compiling each rule in isolation, and then taking the [union](#34-union) of the query plans for any rules with matching head atoms.
+The translation from [PomoLogic](pomo_logic.md) to a relational algebra query plan is straightforward, and can be performed by first compiling each rule in isolation, and then taking the [union](#34-union) of the query plans for any rules with matching head atoms.
 
 A rule is compiled by constructing a query plan from the terms within the rule's body, with respect to the rule's head. Such query plans are not unique, and implementations MAY define their own approach to query planning, but the semantics of the generated query plan MUST match the query plan generated using the following approach.
 
@@ -484,6 +486,6 @@ Next, from the rule's head, `atom(a0: v0, ..., an: vn)`, collect each attribute,
 
 Now, taking the [union](#34-union) of all rules which share a head relation will give the query plan for that relation.
 
-Lastly, [stratify](../dialog/query-engine.md#133-stratification) each of these relations and partition the query plans by the strata they belong to.
+Lastly, [stratify](pomo_logic.md#133-stratification) each of these relations and partition the query plans by the strata they belong to.
 
 TODO: add diagrams + examples for each of these steps
