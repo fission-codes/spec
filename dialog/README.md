@@ -55,9 +55,21 @@ TODO: discuss CALM Theorem and its connection with Datalog
 
 # 2. Design
 
-PomoDB can be broken up into two core components: the query engine, and its storage layer.
+## 2.1 Types
 
-## 2.1 Query Engine
+PomoDB is designed to be run within WebAssembly, and so its types and their encodings are informed by the format. See the [WebAssembly specification](https://webassembly.github.io/spec/core/appendix/index-types.html) for more information.
+
+Note, however, that only some types are supported as PomoDB primitives. These are:
+
+- [Numbers](https://webassembly.github.io/spec/core/syntax/types.html#syntax-numtype)
+- [Opaque Reference Types](https://webassembly.github.io/spec/core/syntax/types.html#reference-types)
+
+As WebAssembly does not define common types like booleans or strings, these are handled using opaque reference types, and more information is available in the [serialization](./serialization.md) specification.
+
+TODO: Update the above reference once that data exists
+
+## 2.2 Query Engine
+
 PomoDB has no specified query language. Instead, an intermediate representation based on the relation algebra, named [PomoRA](./pomo_db/pomo_ra.md), is defined.
 
 An OPTIONAL Datalog variant, named [PomoLogic](./pomo_db/pomo_logic.md), is described, along with an [algorithm](./pomo_db/pomo_ra.md#5-compilation-from-pomo-logic) for translating it to PomoRA.
@@ -70,6 +82,6 @@ This IR is then compiled to a form suitable for being evaluated by an implementa
 
 TODO: Should we describe a simple specification for semi-naive evaluation yet, or just link to some resources? We'll definitely want to specify that too, at some point, but I'd prefer specifying one target to start, so we can launch sooner.
 
-## 2.2 Storage
+## 2.3 Storage
 
 TODO: Introduce + link Brooke's upcoming work on persistence + encryption
