@@ -367,9 +367,15 @@ This operation is equivalent to taking the [difference](#35-difference) of the f
 
 Group by is the mechanism by which aggregation is performed. Group by is performed over a relation with respect to a set of grouping attributes, and an aggregate function. The operation returns the set of tuples computed by first grouping the input relation, and then applying the aggregate function to each group.
 
-TODO: Move the specification of aggregates from PomoLogic to here
+Some aggregates, like `sum`, are parameterized over an attribute name which defines which attribute of the matched tuples to aggregate over.
 
-Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the specification for [PomoLogic](pomo_logic.md#aggregation).
+Implementations MUST support the following aggregates:
+- `count` returns the number of matched tuples
+- `sum(x)` returns the sum of the selected attribute, `x`, in the matched tuples
+- `min(x)` returns the minimum among the selected attribute, `x`, in the matched tuples
+- `max(x)` returns the maximum among the selected attribute, `x`, in the matched tuples
+
+Implementations MAY support user defined aggregates, and such aggregates MUST be deterministic and free of side-effects.
 
 For example:
 

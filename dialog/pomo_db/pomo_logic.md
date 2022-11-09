@@ -325,15 +325,9 @@ totalStock(category: Category, total: Total) :-
   Total := sum Quantity : product(category: Category, quantity: Quantity).
 ```
 
-Implementations are RECOMMENDED to support `count`, `sum`, `min`, and `max` as aggregates, but MAY provide additional built-in aggregates or allow user defined aggregate functions.
+Implementations MUST support the aggregate functions defined by [PomoRA](pomo_ra.md#312-group-by), and MAY provide additional non-standard aggregates or allow user defined aggregate functions.
 
-If implemented, these aggregates MUST be defined as follows:
-- `count` MUST return the number of matched tuples
-- `sum` MUST return the sum of the selected argument in the matched tuples
-- `min` MUST return the minimum of the selected argument in the matched tuples
-- `max` MUST return the maximum of the selected argument in the matched tuples
-
-The argument's to an aggregate's atom form a lexical scope under the rule's body, and new bindings introduced in this scope MUST NOT be accessible to other predicates.
+The arguments to an aggregate's atom form a lexical scope under the rule's body, and new bindings introduced in this scope MUST NOT be accessible to other predicates.
 
 For example, the following rule is not range restricted, and thus invalid, because `Category` is unbound in the rule's head:
 
