@@ -100,7 +100,7 @@ All rules discussed so far are examples of deductive rules. Similarly inductive 
 zeroPoint(x: X, y: Y)@next :− zeroPoint(x: X, y: Y).
 ```
 
-This causes the rule to delay derived tuples until the next timestep. For more information, see [section 1.3.2](#131-time).
+This causes the rule to delay derived tuples until the next timestep. For more information, see [section 1.2.2](#121-time).
 
 ### Predicates
 
@@ -117,24 +117,13 @@ popularProfile(id: X) :−
 
 Here, `c` is bound to the count of `follower` tuples whose `follows` attribute matches `X`. The result is then constrained to only those variable bindings whose associated counts are greater than 1000.
 
-Detailed descriptions of built-in predicates is provided in [section 1.3.5](#135-predicates).
+Detailed descriptions of built-in predicates is provided in [section 1.2.5](#125-predicates).
 
-## 1.2 Types
-
-PomoLogic is designed to be run within WebAssembly, and so its types and their encodings are informed by the format. See the [WebAssembly specification](https://webassembly.github.io/spec/core/appendix/index-types.html) for more information.
-
-Note, however, that only some types are supported as PomoLogic primitives. These are:
-
-- [Numbers](https://webassembly.github.io/spec/core/syntax/types.html#syntax-numtype)
-- [Opaque Reference Types](https://webassembly.github.io/spec/core/syntax/types.html#reference-types)
-
-As WebAssembly does not define common types like booleans or strings, these are handled using opaque reference types, and more information is available in the [serialization](./serialization.md) specification.
-
-## 1.3 Semantics
+## 1.2 Semantics
 
 PomoLogic follows a least fixed point semantics for Datalog, with stratified negation and aggregation, and extensions for reifying time and content IDs.
 
-## 1.3.1 Time
+## 1.2.1 Time
 
 Unlike many variants of Datalog, PomoLogic operates over a changing database, and the query engine internally models the progression of time as the database changes. Importantly, this notion of time forms a logical clock which holds no meaning to any other instances of PomoLogic.
 
@@ -164,7 +153,7 @@ This rule has three heads which together relate the current state of the checkbo
 
 Note that while this rule depends negatively on itself, it's able to do so safely because the timestamp of the head is larger than the timestamps of the atoms in the body, stratifying the program with respect to time.
 
-## 1.3.2 Content Addressing
+## 1.2.2 Content Addressing
 
 As PomoLogic is intended for use in distributed and decentralized deployments, it is important ensure the use of collision resistant identifiers when referring to tuples. For this purpose, a content addressing scheme is leveraged, wherein facts are associated with a content ID (CID) computed from their structure. The details behind this computation are available in [serialization](./serialization.md).
 
@@ -194,7 +183,7 @@ Since content addressing schemes are backed by cryptographically secure hash fun
 
 These properties are further leveraged in the design and use of byzantine-fault tolerant CRDTs, as described in [CRDTs](./CRDTs.md).
 
-## 1.3.3 Stratification
+## 1.2.3 Stratification
 
 PomoLogic supports recursion, negation, and aggregation, and in order to do so safely, it makes use of stratification. Stratification partitions a program's rules into a sequence of strata, based on their dependencies, such that all rules within a stratum depend on each other. These strata are then ordered such that no stratum appears before a stratum containing rules it depends on.
 
@@ -212,17 +201,17 @@ A program may have multiple valid stratifications, if one exists, but the choice
    2) Contract each strongly connected component in `G` to a single vertex, and add it to `C(G)`
    3) For any two distinct strongly connected components in `G`, `c1` and `c2`, if there exists an edge from a vertex in `c1` to a vertex in `c2`, then add a directed edge between the corresponding vertices for `c1` and `c2` in `C(G)`
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
-4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to the modular stratification over time discussed in [section 1.3.1](#131-time), and these rules MAY be implemented using [sinks](#136-sinks)
+4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to the modular stratification over time discussed in [section 1.2.1](#121-time), and these rules MAY be implemented using [sinks](#126-sinks)
 
 Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using PomoLogic.
 
-## 1.3.4 Evaluation
+## 1.2.4 Evaluation
 
-Evaluation of PomoLogic proceeds in [timesteps](#131-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#133-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
+Evaluation of PomoLogic proceeds in [timesteps](#121-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#123-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
-Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#135-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
+Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#125-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
 
-Upon evaluating all strata to a fixed point, the program's [sinks](#136-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
+Upon evaluating all strata to a fixed point, the program's [sinks](#126-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
 
 When evaluating a stratum, rules MAY be evaluated in any order.
 
@@ -233,7 +222,7 @@ Similarly, when evaluating a rule, predicates MAY be reordered, subject to the f
 
 PomoLogic MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the EDB, wherever possible. A recommended runtime in terms of a [dataflow model](./pomo_flow.md) is provided.
 
-## 1.3.5 Predicates
+## 1.2.5 Predicates
 
 ### Selection
 
@@ -245,7 +234,7 @@ Selection ::=
 
 In both cases, the predicate selects tuples from the relation given by the atom, unifying their attributes against the atom's attributes: unbound variables will be bound to the corresponding value in the tuple, and bound variables will filter the selection to include only tuples with matching values.
 
-The second form additionally unifies the [CID](#132-content-addressing) of the selected tuple with the given variable. If this variable has already been bound, then the selection is filtered to only include the tuple with the bound CID.
+The second form additionally unifies the [CID](#122-content-addressing) of the selected tuple with the given variable. If this variable has already been bound, then the selection is filtered to only include the tuple with the bound CID.
 
 ### Negation
 
@@ -382,7 +371,7 @@ diagonal(x: 1, y: 2)
 diagonal(x: 2, y: 2)
 ```
 
-## 1.3.5 Sources
+## 1.2.5 Sources
 
 Sources introduce tuples from the outside world to a running PomoLogic program. They do so at the beginning of each epoch.
 
@@ -392,7 +381,7 @@ Sources MAY emit deltas of tuples, if the PomoLogic implementation is able to ta
 
 Implementations MAY also support user defined sources, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
 
-## 1.3.6 Sinks
+## 1.2.6 Sinks
 
 Sinks process derived tuples at the end of each epoch.
 
