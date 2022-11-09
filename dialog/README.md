@@ -1,4 +1,4 @@
-# Dialog Specification v0.1.0 (Draft)
+# PomoDB v0.1.0 (Draft)
 
 ## Editors
 
@@ -12,9 +12,9 @@
 
 ## Specs
 
-* [Dataflow Runtime](./dialog/dataflow.md)
-* [Query Engine](./dialog/query-engine.md)
-* [Relational Algebra](./dialog/relational-algebra.md)
+* [PomoFlow](./pomo_db/pomo_flow.md)
+* [PomoLogic](./pomo_db/pomo_logic.md)
+* [PomoRA](./pomo_db/pomo_ra.md)
 
 ## Appendices
 
@@ -31,7 +31,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # Abstract
 
-Dialog is a content-addressable database designed for use in far-edge deployments, such as on IoT or consumer devices. It targets this use case by enabling peers to synchronize heterogenous sets of end-to-end encrypted data in an eventually consistent manner.
+PomoDB is a content-addressable database designed for use in far-edge deployments, such as on IoT or consumer devices. It targets this use case by enabling peers to synchronize heterogenous sets of end-to-end encrypted data in an eventually consistent manner.
 
 # 1. Introduction
 
@@ -41,7 +41,7 @@ While existing databases increasingly treat network partitions as unavoidable di
 
 Such techniques are unsuitable for far-edge and local-first applications, where disorder is the norm, network partitions are ubiquitous and unbounded, and there's an uncompromising need for availability. These environments also often involve dynamic network topologies made up of heterogenous peers, for which common definitions of consistency may not apply.
 
-Dialog addresses these constraints through its query engine, whose semantics guarantee eventual consistency across peers with access to the same sources of data. These guarantees are preserved through changes to a peer's access to data, and mean that Dialog is able to act as a sound foundation for globally distributed data with an indeterminate number of transient peers with varied access patterns.
+PomoDB addresses these constraints through its query engine, whose semantics guarantee eventual consistency across peers with access to the same sources of data. These guarantees are preserved through changes to a peer's access to data, and mean that PomoDB is able to act as a sound foundation for globally distributed data with an indeterminate number of transient peers with varied access patterns.
 
 ## 1.2 Insights
 
@@ -55,20 +55,18 @@ TODO: discuss CALM Theorem and its connection with Datalog
 
 # 2. Design
 
-Dialog can be broken up into two core components: the query engine, and its storage layer.
+PomoDB can be broken up into two core components: the query engine, and its storage layer.
 
 ## 2.1 Query Engine
-Dialog has no specified query language. Instead, an intermediate representation based on the [relational algebra](../dialog/dialog/relational-algebra.md) is defined.
+PomoDB has no specified query language. Instead, an intermediate representation based on the relation algebra, named [PomoRA](./pomo_db/pomo_ra.md), is defined.
 
-An OPTIONAL [Datalog variant](../dialog/dialog/query-engine.md) is described, along with an [algorithm](../dialog/dialog/relational-algebra.md#5-compilation-from-dialog) for translating it to the relational algebra IR.
+An OPTIONAL Datalog variant, named [PomoLogic](./pomo_db/pomo_logic.md), is described, along with an [algorithm](./pomo_db/pomo_ra.md#5-compilation-from-pomo-logic) for translating it to PomoRA.
 
-Implementations MAY define their own user-facing query language, but they are RECOMMENDED to treat the relational algebra IR as a common compilation target for all such languages.
-
-TODO: "relational algebra IR" is wordy. We should just give these layers names. Maybe PomoLogic -> PomoRA -> PomoFlow?
+Implementations MAY define their own user-facing query language, but they are RECOMMENDED to treat PomoRA as a common compilation target for all such languages.
 
 TODO: Talk about compiling SQL to PomoRA too. That should probably be another linked spec, but I should tackle one thing at a time.
 
-This IR is then compiled to a form suitable for being evaluated by an implementation-defined runtime. An OPTIONAL [dataflow runtime](../dialog/dialog/dataflow.md) is described, but implementations MAY implement a simpler runtime, based on semi-naive evaluation.
+This IR is then compiled to a form suitable for being evaluated by an implementation-defined runtime. An OPTIONAL dataflow runtime, named [PomoFlow](./pomo_db/pomo_flow.md), is described, but implementations MAY implement a simpler runtime, such as one based on semi-naive evaluation.
 
 TODO: Should we describe a simple specification for semi-naive evaluation yet, or just link to some resources? We'll definitely want to specify that too, at some point, but I'd prefer specifying one target to start, so we can launch sooner.
 

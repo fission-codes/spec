@@ -1,4 +1,4 @@
-# Dialog Query Engine
+# PomoLogic
 
 ## Authors
 
@@ -11,11 +11,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # Abstract
 
-Dialog is query language agnostic, and implementations MAY define arbitrary query frontends. This specification describes the semantics for Dialog's underlying query engine, to which these frontends MUST conform.
+PomoDB is query language agnostic, and implementations MAY define arbitrary query frontends. This specification describes the semantics for PomoLogic, a variant of Datalog, designed for recursive query processing against PomoDB.
 
 # 1. Introduction
 
-The semantics of Dialog's underlying query engine match those of Datalog, extended to support queries over time against a dynamic and content-addressable database.
+TODO: Now that the query language is described in a few layers, some of these details should be pulled out of PomoLogic so they can be reused for non-recursive queries: PomoRA is probably the place for that.
+
+The semantics of PomoLogic match those of Datalog, extended to support queries over time against a dynamic and content-addressable database.
 
 By restricting the expressivity of the engine in this way, it's able to take advantage of the CALM Theorem to ensure the confluence of any programs written using the system.
 
@@ -25,7 +27,9 @@ The following section serves as a brief introduction to Datalog, but a comprehen
 
 ## 1.1 Notation
 
-This section briefly describes a high-level notation for Datalog, as it relates to Dialog, for the purposes of discussing the semantics of the system. An example DSL is [also available](./datalog-dsl.md).
+This section briefly describes a high-level notation for Datalog, as it relates to PomoLogic, for the purposes of discussing the semantics of the system. An example DSL is [also available](./datalog-dsl.md).
+
+TODO: Either make this file or put that info elsewhere.
 
 ### Terms
 
@@ -49,7 +53,7 @@ An instance of a ground atom is often referred to as a tuple for brevity, and th
 
 ### Database
 
-Using standard Datalog terminology, Dialog operates over two databases: the extensional database (EDB), and the intensional database (IDB).
+Using standard Datalog terminology, PomoLogic operates over two databases: the extensional database (EDB), and the intensional database (IDB).
 
 The extensional database refers to the source database containing the ground tuples which act as inputs to a program. Similarly, the intensional database refers to the ground tuples which are derived using the rules in a program, `P`.
 
@@ -117,9 +121,9 @@ Detailed descriptions of built-in predicates is provided in [section 1.3.5](#135
 
 ## 1.2 Types
 
-Dialog is designed to be run within WebAssembly, and so its types and their encodings are informed by the format. See the [WebAssembly specification](https://webassembly.github.io/spec/core/appendix/index-types.html) for more information.
+PomoLogic is designed to be run within WebAssembly, and so its types and their encodings are informed by the format. See the [WebAssembly specification](https://webassembly.github.io/spec/core/appendix/index-types.html) for more information.
 
-Note, however, that only some types are supported as Dialog primitives. These are:
+Note, however, that only some types are supported as PomoLogic primitives. These are:
 
 - [Numbers](https://webassembly.github.io/spec/core/syntax/types.html#syntax-numtype)
 - [Opaque Reference Types](https://webassembly.github.io/spec/core/syntax/types.html#reference-types)
@@ -128,15 +132,15 @@ As WebAssembly does not define common types like booleans or strings, these are 
 
 ## 1.3 Semantics
 
-Dialog follows a least fixed point semantics for Datalog, with stratified negation and aggregation, and extensions for reifying time and content IDs.
+PomoLogic follows a least fixed point semantics for Datalog, with stratified negation and aggregation, and extensions for reifying time and content IDs.
 
 ## 1.3.1 Time
 
-Unlike many variants of Datalog, Dialog operates over a changing database, and the query engine internally models the progression of time as the database changes. Importantly, this notion of time forms a logical clock which holds no meaning to any other instances of Dialog.
+Unlike many variants of Datalog, PomoLogic operates over a changing database, and the query engine internally models the progression of time as the database changes. Importantly, this notion of time forms a logical clock which holds no meaning to any other instances of PomoLogic.
 
 The database state is then modeled as a function of time and the program under evaluation, but this computation is intentionally left unspecified, and implementations are free to make their own choices according to their performance constraints and desired features, subject to the following semantics.
 
-First, let `P` be some Dialog program, let `next(t)` denote the smallest timestamp `t'`, such that `t < t'`, and let `IDB(t, p)` denote the IDB at time `t`.
+First, let `P` be some PomoLogic program, let `next(t)` denote the smallest timestamp `t'`, such that `t < t'`, and let `IDB(t, p)` denote the IDB at time `t`.
 
 Then, for all deductive rules `r` in `P`, if `r` derives a tuple `X` at time `t`, then `X` is in `IDB(t, p)`. Similarly, for all inductive rules `r` in `P`, if `r` derives a tuple `X` at time `t`, then `X` is in `IDB(next(t), P)`.
 
@@ -146,7 +150,7 @@ In order to guarantee a finite execution time for programs containing inductive 
 2) The body contains at least one positive instantaneous predicate
    1) TODO: Explain what this means!
 
-Treating time in this way is what allows Dialog to support both transient tuples—like those that might be used to model events in a user interface—and persistent tuples that capture long-lived data.
+Treating time in this way is what allows PomoLogic to support both transient tuples—like those that might be used to model events in a user interface—and persistent tuples that capture long-lived data.
 
 For example, given a relation `clicks` whose tuples denote a user clicking on a UI element during the current timestamp, a user interface containing a checkbox might be modeled like so:
 
@@ -162,7 +166,7 @@ Note that while this rule depends negatively on itself, it's able to do so safel
 
 ## 1.3.2 Content Addressing
 
-As Dialog is intended for use in distributed and decentralized deployments, it is important ensure the use of collision resistant identifiers when referring to tuples. For this purpose, a content addressing scheme is leveraged, wherein facts are associated with a content ID (CID) computed from their structure. The details behind this computation are available in [serialization](./serialization.md).
+As PomoLogic is intended for use in distributed and decentralized deployments, it is important ensure the use of collision resistant identifiers when referring to tuples. For this purpose, a content addressing scheme is leveraged, wherein facts are associated with a content ID (CID) computed from their structure. The details behind this computation are available in [serialization](./serialization.md).
 
 (Note: this may not actually be the right way of thinking about this, because in many cases, these CIDs are for tuples derived from the EVAC tuples in IPFS, rather than the EVAC tuples themselves. Instead we might also want to accumulate the provenance of variables across joins, and expose a predicate that queries over that provenance. This provenance tracking might even happen conditionally, based on whether it's needed by the program)
 
@@ -184,7 +188,7 @@ categoryCount(category: Category, count: Count) :-
 
 In this example, the CID of each tuple in the `category` relation acts as its primary key, and is suitable for use as a foreign key when joining against this relation for aggregation purposes.
 
-The choice of CIDs here, rather than more common choices, like auto incrementing IDs or UUIDs, reflects Dialog's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
+The choice of CIDs here, rather than more common choices, like auto incrementing IDs or UUIDs, reflects PomoLogic's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
 
 Since content addressing schemes are backed by cryptographically secure hash functions, their use here prevents forgery of IDs by attackers, and guarantees that CID-based dependencies between tuples will be acyclic.
 
@@ -192,7 +196,7 @@ These properties are further leveraged in the design and use of byzantine-fault 
 
 ## 1.3.3 Stratification
 
-Dialog supports recursion, negation, and aggregation, and in order to do so safely, it makes use of stratification. Stratification partitions a program's rules into a sequence of strata, based on their dependencies, such that all rules within a stratum depend on each other. These strata are then ordered such that no stratum appears before a stratum containing rules it depends on.
+PomoLogic supports recursion, negation, and aggregation, and in order to do so safely, it makes use of stratification. Stratification partitions a program's rules into a sequence of strata, based on their dependencies, such that all rules within a stratum depend on each other. These strata are then ordered such that no stratum appears before a stratum containing rules it depends on.
 
 This gives an evaluation order for the program which guarantees convergence toward a unique IDB for any evaluation of a given EDB at some time.
 
@@ -210,11 +214,11 @@ A program may have multiple valid stratifications, if one exists, but the choice
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
 4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to the modular stratification over time discussed in [section 1.3.1](#131-time), and these rules MAY be implemented using [sinks](#136-sinks)
 
-Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using Dialog.
+Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using PomoLogic.
 
 ## 1.3.4 Evaluation
 
-Evaluation of Dialog proceeds in [timesteps](#131-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#133-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
+Evaluation of PomoLogic proceeds in [timesteps](#131-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#133-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
 Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#135-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
 
@@ -227,7 +231,7 @@ Similarly, when evaluating a rule, predicates MAY be reordered, subject to the f
 - Aggregation predicates MUST NOT be evaluated until any bindings they share with the rule's body are fully grounded
 - Constraint predicates MUST NOT be evaluated until both terms are grounded
 
-Dialog's query engine MAY be implemented over incremental computations, in which case each epoch SHOULD prefer to operate over deltas of the EDB as much as possible. A recommended design in terms of a [dataflow model](./dataflow.md) is provided.
+PomoLogic MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the EDB, wherever possible. A recommended runtime in terms of a [dataflow model](./pomo_flow.md) is provided.
 
 ## 1.3.5 Predicates
 
@@ -249,7 +253,7 @@ The second form additionally unifies the [CID](#132-content-addressing) of the s
 Negation ::= !Atom
 ```
 
-Dialog implements stratified negation, and the negation predicate filters for variable bindings which do not result in any tuples being selected. This predicate MUST be evaluated after all of the variables in the atom's attributes are bound, and it causes the search to fail if it discovers any matching tuples.
+PomoLogic implements stratified negation, and the negation predicate filters for variable bindings which do not result in any tuples being selected. This predicate MUST be evaluated after all of the variables in the atom's attributes are bound, and it causes the search to fail if it discovers any matching tuples.
 
 For example, the following program computes meal suggestions for pairs of people, such that one person likes the suggestion, and neither dislikes it:
 
@@ -293,7 +297,7 @@ Aggregation ::=
   | Var := <UserDefinedAggFun> Var* : Atom
 ```
 
-Dialog's aggregation predicates compute a summary value over a relation for some set of attribute bindings, called the grouping attributes. This summary value is bound to the given variable. If this unification fails, or if the aggregate function returns no result, then the search fails.
+PomoLogic's aggregation predicates compute a summary value over a relation for some set of attribute bindings, called the grouping attributes. This summary value is bound to the given variable. If this unification fails, or if the aggregate function returns no result, then the search fails.
 
 Some aggregates, like `sum`, are parameterized over variables which are used to select components of the matched tuples, for aggregation purposes. Such parameters MUST be otherwise unbound, and MUST only appear once within the aggregated atom's attributes.
 
@@ -386,13 +390,13 @@ diagonal(x: 2, y: 2)
 
 ## 1.3.5 Sources
 
-Sources introduce tuples from the outside world to a running Dialog program. They do so at the beginning of each epoch.
+Sources introduce tuples from the outside world to a running PomoLogic program. They do so at the beginning of each epoch.
 
 Implementations MAY define their own sources, but sources SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
-Sources MAY emit deltas of tuples, if the Dialog implementation is able to take advantage of incremental computation.
+Sources MAY emit deltas of tuples, if the PomoLogic implementation is able to take advantage of incremental computation.
 
-Implementations MAY also support user defined sources, such as to facilitate the integration of Dialog into external systems for persistence or communication.
+Implementations MAY also support user defined sources, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
 
 ## 1.3.6 Sinks
 
@@ -400,4 +404,4 @@ Sinks process derived tuples at the end of each epoch.
 
 Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
-Implementations MAY also support user defined sinks, such as to facilitate the integration of Dialog into external systems for persistence or communication.
+Implementations MAY also support user defined sinks, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
