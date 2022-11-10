@@ -15,27 +15,23 @@ PomoDB is query language agnostic, and implementations MAY define arbitrary quer
 
 # 1. Introduction
 
-TODO: Now that the query language is described in a few layers, some of these details should be pulled out of PomoLogic so they can be reused for non-recursive queries: PomoRA is probably the place for that.
-
 The semantics of PomoLogic match those of Datalog, extended to support queries over time against a dynamic and content-addressable database.
 
 By restricting the expressivity of the engine in this way, it's able to take advantage of the CALM Theorem to ensure the confluence of any programs written using the system.
 
 Datalog is a relational query language that operates on a database of tuples, named atoms, using programmer defined rules, in order to compute a view over that database.
 
-The following section serves as a brief introduction to Datalog, but a comprehensive description of the language and its various extensions is beyond the scope of this specification, and more complete treatments can be found in the [research appendices](./RESEARCH.md).
+The following section serves as a brief introduction to Datalog, but a comprehensive description of the language and its various extensions is beyond the scope of this specification, and more complete treatments can be found in the [research appendices](../RESEARCH.md).
 
 ## 1.1 Notation
 
-This section briefly describes a high-level notation for Datalog, as it relates to PomoLogic, for the purposes of discussing the semantics of the system. An example DSL is [also available](./datalog-dsl.md).
+This section briefly describes a high-level notation for Datalog, as it relates to PomoLogic, for the purposes of discussing the semantics of the system. An example DSL is [also available](datalog-dsl.md).
 
 TODO: Either make this file or put that info elsewhere.
 
 ### Terms
 
 A Datalog term is either a constant, or a variable. Variables begin with an uppercase character, and constants are written as literals.
-
-The allowed types are defined in [section 1.2](#types).
 
 ### Atoms
 
@@ -155,11 +151,7 @@ Note that while this rule depends negatively on itself, it's able to do so safel
 
 ## 1.2.2 Content Addressing
 
-As PomoLogic is intended for use in distributed and decentralized deployments, it is important ensure the use of collision resistant identifiers when referring to tuples. For this purpose, a content addressing scheme is leveraged, wherein facts are associated with a content ID (CID) computed from their structure. The details behind this computation are available in [serialization](./serialization.md).
-
-(Note: this may not actually be the right way of thinking about this, because in many cases, these CIDs are for tuples derived from the EVAC tuples in IPFS, rather than the EVAC tuples themselves. Instead we might also want to accumulate the provenance of variables across joins, and expose a predicate that queries over that provenance. This provenance tracking might even happen conditionally, based on whether it's needed by the program)
-
-This CID is accessed through the selection predicate, which can optionally unify a tuple's CID with a variable:
+The [CID](../README.md#23-content-addressing) for a tuple is accessed through the selection predicate, which can optionally unify a tuple's CID with a variable:
 
 ```datalog
 C := point(x: X, y: Y)
@@ -176,12 +168,6 @@ categoryCount(category: Category, count: Count) :-
 ```
 
 In this example, the CID of each tuple in the `category` relation acts as its primary key, and is suitable for use as a foreign key when joining against this relation for aggregation purposes.
-
-The choice of CIDs here, rather than more common choices, like auto incrementing IDs or UUIDs, reflects PomoLogic's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
-
-Since content addressing schemes are backed by cryptographically secure hash functions, their use here prevents forgery of IDs by attackers, and guarantees that CID-based dependencies between tuples will be acyclic.
-
-These properties are further leveraged in the design and use of byzantine-fault tolerant CRDTs, as described in [CRDTs](./CRDTs.md).
 
 ## 1.2.3 Stratification
 
@@ -220,7 +206,7 @@ Similarly, when evaluating a rule, predicates MAY be reordered, subject to the f
 - Aggregation predicates MUST NOT be evaluated until any bindings they share with the rule's body are fully grounded
 - Constraint predicates MUST NOT be evaluated until both terms are grounded
 
-PomoLogic MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the EDB, wherever possible. A recommended runtime in terms of a [dataflow model](./pomo_flow.md) is provided.
+PomoLogic MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the EDB, wherever possible. A recommended runtime in terms of a [dataflow model](pomo_flow.md) is provided.
 
 ## 1.2.5 Predicates
 
@@ -314,7 +300,7 @@ totalStock(category: Category, total: Total) :-
   Total := sum Quantity : product(category: Category, quantity: Quantity).
 ```
 
-Implementations MUST support the aggregate functions defined by [PomoRA](pomo_ra.md#312-group-by), and MAY provide additional non-standard aggregates or allow user defined aggregate functions.
+Implementations MUST support the aggregate functions defined by [PomoRA](pomo_ra.md#212-group-by), and MAY provide additional non-standard aggregates or allow user defined aggregate functions.
 
 The arguments to an aggregate's atom form a lexical scope under the rule's body, and new bindings introduced in this scope MUST NOT be accessible to other predicates.
 

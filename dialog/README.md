@@ -12,13 +12,13 @@
 
 ## Specs
 
-* [PomoFlow](./pomo_db/pomo_flow.md)
-* [PomoLogic](./pomo_db/pomo_logic.md)
-* [PomoRA](./pomo_db/pomo_ra.md)
+* [PomoFlow](pomo_db/pomo_flow.md)
+* [PomoLogic](pomo_db/pomo_logic.md)
+* [PomoRA](pomo_db/pomo_ra.md)
 
 ## Appendices
 
-* [Research](./RESEARCH.md)
+* [Research](RESEARCH.md)
 
 ## Links
 
@@ -64,24 +64,54 @@ Note, however, that only some types are supported as PomoDB primitives. These ar
 - [Numbers](https://webassembly.github.io/spec/core/syntax/types.html#syntax-numtype)
 - [Opaque Reference Types](https://webassembly.github.io/spec/core/syntax/types.html#reference-types)
 
-As WebAssembly does not define common types like booleans or strings, these are handled using opaque reference types, and more information is available in the [serialization](./serialization.md) specification.
+As WebAssembly does not define common types like booleans or strings, these are handled using opaque reference types, and more information is available in the [serialization](pomo_db/serialization.md) specification.
 
 TODO: Update the above reference once that data exists
 
-## 2.2 Query Engine
+## 2.2 Relation
 
-PomoDB has no specified query language. Instead, an intermediate representation based on the relation algebra, named [PomoRA](./pomo_db/pomo_ra.md), is defined.
+A relation is a set of tuples, where each component of the tuple is called an attribute, and can be referenced by an attribute name.
 
-An OPTIONAL Datalog variant, named [PomoLogic](./pomo_db/pomo_logic.md), is described, along with an [algorithm](./pomo_db/pomo_ra.md#5-compilation-from-pomo-logic) for translating it to PomoRA.
+A n-ary relation contains n-tuples, which can each be written:
+
+```
+(a1: v1, a2: v2, ..., an: vn)
+```
+
+Where `a1, a2, ..., an` give the names of each attribute, and `v1, v2, ..., vn` their values.
+
+Each tuple within a relation also has a content identifier (CID), as described in the specification for [PomoLogic](pomo_db/pomo_logic.md#132-content-addressing). This CID can be accessed through a special control attribute that this document will denote as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
+
+## 2.3 Content Addressing
+
+As PomoDB is intended for use in distributed and decentralized deployments, it is important ensure the use of collision resistant identifiers when referring to tuples. For this purpose, a content addressing scheme is leveraged, and tuples are associated with a content ID (CID) computed from their structure. The details behind this computation are available in [serialization](pomo_db/serialization.md).
+
+The choice of CIDs here, rather than more common choices, like auto incrementing IDs or UUIDs, reflects PomoDB's goals in targeting distributed and decentralized environments, where coordination around the allocation of IDs can't be guaranteed, and where resilience against malicious and byzantine actors is required.
+
+Since content addressing schemes are backed by cryptographically secure hash functions, their use here prevents forgery of IDs by attackers, and guarantees that CID-based dependencies between tuples will be acyclic.
+
+These properties are further leveraged in the design and use of byzantine-fault tolerant CRDTs, as described in [CRDTs](pomo_db/CRDTs.md).
+
+TODO: Update CRDT link once that info is described somewhere
+
+## 2.4 Provenance Tracking
+
+TODO: https://discord.com/channels/478735028319158273/1033502043656171561/1035339517021921280
+
+## 2.5 Query Engine
+
+PomoDB has no specified query language. Instead, an intermediate representation based on the relation algebra, named [PomoRA](pomo_db/pomo_ra.md), is defined.
+
+An OPTIONAL Datalog variant, named [PomoLogic](pomo_db/pomo_logic.md), is described, along with an [algorithm](pomo_db/pomo_ra.md#4-compilation-from-pomo-logic) for translating it to PomoRA.
 
 Implementations MAY define their own user-facing query language, but they are RECOMMENDED to treat PomoRA as a common compilation target for all such languages.
 
 TODO: Talk about compiling SQL to PomoRA too. That should probably be another linked spec, but I should tackle one thing at a time.
 
-This IR is then compiled to a form suitable for being evaluated by an implementation-defined runtime. An OPTIONAL dataflow runtime, named [PomoFlow](./pomo_db/pomo_flow.md), is described, but implementations MAY implement a simpler runtime, such as one based on semi-naive evaluation.
+This IR is then compiled to a form suitable for being evaluated by an implementation-defined runtime. An OPTIONAL dataflow runtime, named [PomoFlow](pomo_db/pomo_flow.md), is described, but implementations MAY implement a simpler runtime, such as one based on semi-naive evaluation.
 
 TODO: Should we describe a simple specification for semi-naive evaluation yet, or just link to some resources? We'll definitely want to specify that too, at some point, but I'd prefer specifying one target to start, so we can launch sooner.
 
-## 2.3 Storage
+## 2.6 Storage
 
 TODO: Introduce + link Brooke's upcoming work on persistence + encryption
