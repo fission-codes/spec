@@ -21,7 +21,7 @@ This document describes an alternative runtime, built on dataflow, which represe
 
 Since the stream computations correspond to the relational algebra, compiling to these circuits from PomoRA is simple, and is also described in this document.
 
-The design is based on ideas from Differential Dataflow, and is heavily inspired by the Database Stream Processor Framework (DBSP). Links to both can be found in the [research appendices](./RESEARCH.md).
+The design is based on ideas from Differential Dataflow, and is heavily inspired by the Database Stream Processor Framework (DBSP). Links to both can be found in the [research appendices](../RESEARCH.md).
 
 # 2. Concepts
 
