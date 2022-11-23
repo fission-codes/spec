@@ -15,11 +15,9 @@ This document describes PomoFlow, a dataflow runtime for PomoDB. This design is 
 
 # 1. Introduction
 
-Most Datalog runtimes implement a variant of semi-naive evaluation, where queries are run over the course of multiple iterations, with each iteration refining the result toward a fixed point. Such designs can efficiently compute views over a fixed EDB, but are insufficient for incrementalizing evaluation over an EDB that changes over time.
+Most relational query runtimes implement a variant of semi-naive evaluation, where queries are run over the course of multiple iterations, with each iteration refining the result toward a fixed point. Such designs can efficiently compute views over a fixed database, but are insufficient for incrementalizing evaluation over a database that changes over time.
 
 This document describes an alternative runtime, built on dataflow, which represents programs as circuits whose vertices and edges correspond to computations over streams of data. These circuits can be incrementalized to instead operate over deltas, with the results being combined back into a materialized view.
-
-Since the stream computations correspond to the relational algebra, compiling to these circuits from PomoRA is simple, and is also described in this document.
 
 The design is based on ideas from Differential Dataflow, and is heavily inspired by the Database Stream Processor Framework (DBSP). Links to both can be found in the [research appendices](../RESEARCH.md).
 
