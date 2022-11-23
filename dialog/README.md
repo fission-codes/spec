@@ -80,7 +80,11 @@ A n-ary relation contains n-tuples, which can each be written:
 
 Where `a1, a2, ..., an` give the names of each attribute, and `v1, v2, ..., vn` their values.
 
-Each tuple within a relation also has a content identifier (CID), as described in the specification for [PomoLogic](pomo_db/pomo_logic.md#132-content-addressing). This CID can be accessed through a special control attribute that this document will denote as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
+### 2.2.1 CID Attribute
+
+Each tuple within a relation also has a content identifier (CID), as described in the specification for [PomoLogic](pomo_db/pomo_logic.md#132-content-addressing).
+
+This CID can be accessed through a special control attribute that this document will denote as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
 
 ## 2.3 Content Addressing
 
@@ -100,17 +104,11 @@ TODO: https://discord.com/channels/478735028319158273/1033502043656171561/103533
 
 ## 2.5 Query Engine
 
-PomoDB has no specified query language. Instead, an intermediate representation based on the relation algebra, named [PomoRA](pomo_db/pomo_ra.md), is defined.
-
-An OPTIONAL Datalog variant, named [PomoLogic](pomo_db/pomo_logic.md), is described, along with an [algorithm](pomo_db/pomo_ra.md#4-compilation-from-pomo-logic) for translating it to PomoRA.
+PomoDB has no specified query language. Instead, an intermediate representation based on the relational algebra, named [PomoRA](pomo_db/pomo_ra.md), is defined.
 
 Implementations MAY define their own user-facing query language, but they are RECOMMENDED to treat PomoRA as a common compilation target for all such languages.
 
-TODO: Talk about compiling SQL to PomoRA too. That should probably be another linked spec, but I should tackle one thing at a time.
-
-This IR is then compiled to a form suitable for being evaluated by an implementation-defined runtime. An OPTIONAL dataflow runtime, named [PomoFlow](pomo_db/pomo_flow.md), is described, but implementations MAY implement a simpler runtime, such as one based on semi-naive evaluation.
-
-TODO: Should we describe a simple specification for semi-naive evaluation yet, or just link to some resources? We'll definitely want to specify that too, at some point, but I'd prefer specifying one target to start, so we can launch sooner.
+An OPTIONAL Datalog variant, named [PomoLogic](pomo_db/pomo_logic.md), is also described, along with an OPTIONAL runtime for PomoRA, named [PomoFlow](pomo_db/pomo_flow.md).
 
 ## 2.6 Storage
 

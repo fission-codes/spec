@@ -211,7 +211,7 @@ This operator takes an [Indexed ZSet](#22-indexed-zset) as input, and applies an
 
 (TODO: maybe it should use the circuit's current timestamp. I need to do some experimentation with timestamps because I think I can simplify the model slightly)
 
-Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the [specification for the query language](pomo_logic.md#aggregation).
+Implementations MAY support user defined aggregates, but MUST support the aggregate functions described in the [specification for the query language](pomo_logic.md#253-aggregation).
 
 If additional aggregates are supported, they MUST be pure functions, and implementations are RECOMMENDED to enforce this constraint.
 

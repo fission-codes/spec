@@ -25,9 +25,7 @@ The following section serves as a brief introduction to Datalog, but a comprehen
 
 ## 1.1 Notation
 
-This section briefly describes a high-level notation for Datalog, as it relates to PomoLogic, for the purposes of discussing the semantics of the system. An example DSL is [also available](datalog-dsl.md).
-
-TODO: Either make this file or put that info elsewhere.
+This section briefly describes a high-level notation for discussing PomoLogic, however implementations MAY define their own syntax for the language.
 
 ### Terms
 
@@ -96,7 +94,7 @@ All rules discussed so far are examples of deductive rules. Similarly inductive 
 zeroPoint(x: X, y: Y)@next :− zeroPoint(x: X, y: Y).
 ```
 
-This causes the rule to delay derived tuples until the next timestep. For more information, see [section 1.2.2](#121-time).
+This causes the rule to delay derived tuples until the next timestep. For more information, see [time](#21-time).
 
 ### Predicates
 
@@ -113,13 +111,13 @@ popularProfile(id: X) :−
 
 Here, `c` is bound to the count of `follower` tuples whose `follows` attribute matches `X`. The result is then constrained to only those variable bindings whose associated counts are greater than 1000.
 
-Detailed descriptions of built-in predicates is provided in [section 1.2.5](#125-predicates).
+For more information, see the detailed descriptions of built-in [predicates](#25-predicates).
 
-## 1.2 Semantics
+# 2. Semantics
 
 PomoLogic follows a least fixed point semantics for Datalog, with stratified negation and aggregation, and extensions for reifying time and content IDs.
 
-## 1.2.1 Time
+## 2.1 Time
 
 Unlike many variants of Datalog, PomoLogic operates over a changing database, and the query engine internally models the progression of time as the database changes. Importantly, this notion of time forms a logical clock which holds no meaning to any other instances of PomoLogic.
 
@@ -149,7 +147,7 @@ This rule has three heads which together relate the current state of the checkbo
 
 Note that while this rule depends negatively on itself, it's able to do so safely because the timestamp of the head is larger than the timestamps of the atoms in the body, stratifying the program with respect to time.
 
-## 1.2.2 Content Addressing
+## 2.2 Content Addressing
 
 The [CID](../README.md#23-content-addressing) for a tuple is accessed through the selection predicate, which can optionally unify a tuple's CID with a variable:
 
@@ -169,7 +167,9 @@ categoryCount(category: Category, count: Count) :-
 
 In this example, the CID of each tuple in the `category` relation acts as its primary key, and is suitable for use as a foreign key when joining against this relation for aggregation purposes.
 
-## 1.2.3 Stratification
+## 2.3 Stratification
+
+TODO: We may want to constrain the use of content identifiers in mutually recursive rules, to avoid the risk of non-terminating queries.
 
 PomoLogic supports recursion, negation, and aggregation, and in order to do so safely, it makes use of stratification. Stratification partitions a program's rules into a sequence of strata, based on their dependencies, such that all rules within a stratum depend on each other. These strata are then ordered such that no stratum appears before a stratum containing rules it depends on.
 
@@ -187,17 +187,17 @@ A program may have multiple valid stratifications, if one exists, but the choice
    2) Contract each strongly connected component in `G` to a single vertex, and add it to `C(G)`
    3) For any two distinct strongly connected components in `G`, `c1` and `c2`, if there exists an edge from a vertex in `c1` to a vertex in `c2`, then add a directed edge between the corresponding vertices for `c1` and `c2` in `C(G)`
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
-4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to the modular stratification over time discussed in [section 1.2.1](#121-time), and these rules MAY be implemented using [sinks](#126-sinks)
+4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time), and these rules MAY be implemented using [sinks](#27-sinks)
 
 Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using PomoLogic.
 
-## 1.2.4 Evaluation
+## 2.4 Evaluation
 
-Evaluation of PomoLogic proceeds in [timesteps](#121-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#123-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
+Evaluation of PomoLogic proceeds in [timesteps](#21-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#23-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
-Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#125-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
+Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#26-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
 
-Upon evaluating all strata to a fixed point, the program's [sinks](#126-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
+Upon evaluating all strata to a fixed point, the program's [sinks](#27-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
 
 When evaluating a stratum, rules MAY be evaluated in any order.
 
@@ -208,9 +208,9 @@ Similarly, when evaluating a rule, predicates MAY be reordered, subject to the f
 
 PomoLogic MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the EDB, wherever possible. A recommended runtime in terms of a [dataflow model](pomo_flow.md) is provided.
 
-## 1.2.5 Predicates
+## 2.5 Predicates
 
-### Selection
+### 2.5.1 Selection
 
 ```
 Selection ::=
@@ -220,9 +220,9 @@ Selection ::=
 
 In both cases, the predicate selects tuples from the relation given by the atom, unifying their attributes against the atom's attributes: unbound variables will be bound to the corresponding value in the tuple, and bound variables will filter the selection to include only tuples with matching values.
 
-The second form additionally unifies the [CID](#122-content-addressing) of the selected tuple with the given variable. If this variable has already been bound, then the selection is filtered to only include the tuple with the bound CID.
+The second form additionally unifies the [CID](#22-content-addressing) of the selected tuple with the given variable. If this variable has already been bound, then the selection is filtered to only include the tuple with the bound CID.
 
-### Negation
+### 2.5.2 Negation
 
 ```
 Negation ::= !Atom
@@ -261,7 +261,7 @@ suggestedMeal(person1: "Quinn", person2: "Brooke", meal: "Ramen")
 suggestedMeal(person1: "Brooke, person2: "Quinn", meal: "Schnitzel")
 ```
 
-### Aggregation
+### 2.5.3 Aggregation
 
 ```
 Aggregation ::=
@@ -300,7 +300,7 @@ totalStock(category: Category, total: Total) :-
   Total := sum Quantity : product(category: Category, quantity: Quantity).
 ```
 
-Implementations MUST support the aggregate functions defined by [PomoRA](pomo_ra.md#212-group-by), and MAY provide additional non-standard aggregates or allow user defined aggregate functions.
+Implementations MUST support the aggregate functions defined by [PomoRA](pomo_ra.md#232-group-by), and MAY provide additional non-standard aggregates or allow user defined aggregate functions.
 
 The arguments to an aggregate's atom form a lexical scope under the rule's body, and new bindings introduced in this scope MUST NOT be accessible to other predicates.
 
@@ -312,7 +312,7 @@ totalStock(category: Category, total: Total) :- Total := sum Quantity product(ca
 
 Implementations are RECOMMENDED to implement aggregate functions as linear operations, wherever possible. Such functions can be implemented efficiently in terms of incremental operations over deltas.
 
-### Constraints
+### 2.5.4 Constraints
 
 ```
 Constraint ::=
@@ -357,7 +357,7 @@ diagonal(x: 1, y: 2)
 diagonal(x: 2, y: 2)
 ```
 
-## 1.2.5 Sources
+## 2.6 Sources
 
 Sources introduce tuples from the outside world to a running PomoLogic program. They do so at the beginning of each epoch.
 
@@ -367,10 +367,108 @@ Sources MAY emit deltas of tuples, if the PomoLogic implementation is able to ta
 
 Implementations MAY also support user defined sources, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
 
-## 1.2.6 Sinks
+## 2.7 Sinks
 
 Sinks process derived tuples at the end of each epoch.
 
 Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
 Implementations MAY also support user defined sinks, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
+
+# 3. Compilation to PomoRA
+
+TODO: I realize this is very verbose and that it can be simplified and broken up. I'll worry about that after the first pass through describing things :)
+
+The translation to [PomoRA](pomo_ra.md) from PomoLogic is straightforward, and can be performed by first computing a [stratification](#23-stratification) for the program, `S0, S1, ..., Sn`, and then considering each stratum in isolation.
+
+For a given stratum, each [rule is compiled](#31-rule-compilation). If the stratum is recursive, the resulting statements are wrapped in a [loop](pomo_ra.md#loops).
+
+## 3.1 Rule Compilation
+
+Every rule is compiled to an [assignment](pomo_ra#assignment). The rule's head relation appears on the left of the assignment, and a PomoRA expression appears on the right.
+
+This expression is constructed from a query plan given by the terms within the rule's body. Such query plans are not unique, and implementations MAY define their own approach to query planning, but the semantics of the generated query plan MUST match the query plan generated using the following approach.
+
+1) [Associate each variable with a unique name](#311-variables)
+2) [Compile selection predicates](#312-selections)
+3) [Compile constraints](#313-constraints)
+4) [Compile negations](#314-negations)
+5) [Compile aggregates](#315-aggregations)
+6) [Perform head unification](#316-head-unification)
+
+The result of this process will be a PomoRA expression that computes the output of a given rule, and that expression can be used as the right side of the rule's corresponding [assignment](pomo_ra.md#assignment).
+
+### 3.1.1 Variables
+
+First, for each unique variable, `var`, used in the rule's body, associate it with a unique name, `name(var)`. This name MUST NOT collide with any attributes on relations referenced by the rule.
+
+For example, given variables `x`, `y`, and `z`:
+ - `name(x) => "var0"`
+ - `name(y) => "var1"`
+ - `name(z) => "var2"`
+
+### 3.1.2 Selections
+
+Next, collect every [selection](#251-selection) predicate in the rule's body into a set, named `selections`.
+
+Now, for each predicate in `selections`, we have two cases:
+- `atom(a0: v0, ..., an: vn)`
+- `Var := atom(a0: v0, ..., an: vn)`
+
+In both cases, start by generating a [projection](pomo_ra#231-projection) operation against `atom`, for the attributes `a0, ..., an`. In the second case, additionally project against the control attribute [$CID](../README.md#221-cid-attribute). Denote this operation by `source`.
+
+Then, for all attributes `a`, with value `v`, and `v` being a constant, generate a [propositional formula](pomo_ra#22-propositional-formula) made up of the conjunction of all such attributes being compared for equality against their associated value.
+
+If this formula contains any terms, then generate a [selection](pomo_ra#233-selection) against `source`, that filters by this formula, and denote the resulting relation by `source`.
+
+Now, for all attributes `a`, with value `v`, and `v` being a variable, if this set is non-empty, then generate a [rename](pomo_ra#232-rename) operation against `source`, that renames every attribute `a` to `name(v)`. 
+
+If the CID of the relation is being bound to a variable, `var`, additionally rename `$CID` to `name(var)`. Store the resulting relation in a set denoted by `sources`.
+
+Next, fold over the relations in `sources`, using the first relation as the initial accumulator. For each pair of relations considered, `left` and `right`, there are three possibilities:
+1) `left` and `right` share no common attributes
+   - Return the [cartesian product](pomo_ra#236-cartesian-product) of `left` and `right` as the new accumulator
+2) The attributes of `right` are fully contained in the attributes of `left` (or the reverse is true)
+    - Return the [semijoin](pomo_ra#2310-semijoin) of `left` and `right` as the new accumulator
+3) `left` and `right` share some common attributes
+    - Return the [natural join](pomo_ra#237-natural-join) of `left` and `right` as the new accumulator
+
+At the end of this process, the fold will have returned a relation corresponding to the joining of all positive terms in the rule's body. Denote that relation `rule_body`.
+
+### 3.1.3 Constraints
+
+Next, collect every [constraint](#254-constraints) in the rule's body into a set, named `constraints`.
+
+Then, compile `constraints` to a single [propositional formula](pomo_ra#22-propositional-formula), `prop_constraints`, made up of the conjunction of all constraints, such that all variables, `var`, are replaced with `name(var)`.
+
+For example:
+ - `[x <= 5] => name(x) <= 5`
+ - `[x <= y, y = 5] => name(x) <= name(y) AND name(y) = 5`
+
+ If `prop_constraints` is non-empty, then generate a [selection](pomo_ra#233-selection) against `rule_body` using `prop_constraints` as its formula. Denote the resulting relation as the new `rule_body`.
+
+ ### 3.1.4 Negations
+
+Next, collect every [negation](#252-negation) in the rule's body into a set, named `negations`.
+
+Now, for each predicate in `negations`, `!atom(a0: v0, ..., an: vn)`, start by generating a [projection](pomo_ra#231-projection) operation against `atom`, for the attributes `a0, ..., an`. Denote the resulting relation as `negated_relation`.
+
+Then, for all attributes `a`, with value `v`, and `v` being a constant, generate a [propositional formula](pomo_ra#22-propositional-formula) made up of the conjunction of all such attributes being compared for equality against their associated value. If this formula contains any terms, then generate a [selection](pomo_ra#233-selection) against `negation`, that filters by this formula, and denote the resulting relation by `negated_relation`.
+
+Now, for all attributes `a`, with value `v`, and `v` being a variable, if this set is non-empty, then generate a [rename](pomo_ra#232-rename) operation against `negated_relation`, that renames every attribute `a` to `name(v)`. Store the resulting relation in a set denoted by `negated_relations`.
+
+Next, fold over the relations in `negated_relations`, using `rule_body` as the initial accumulator. For each pair of relations considered, `negated_relation` and `accumulator`, return an [antijoin](pomo_ra#2311-antijoin) between `accumulator` and `negated_relation` as the new accumulator.
+
+At the end of this process, the fold will have returned a relation corresponding to the joining of all positive terms in the rule's body, the selection of any constraints, along with the negation of all negative terms in the rule's body. Denote that relation `rule_body`.
+
+### 3.1.5 Aggregations
+
+Next, collect every [aggregation](#253-aggregation) in the rule's body into a set, named `aggregations`.
+
+TODO: aggregation
+
+### 3.1.6 Head Unification
+
+Next, from the rule's head, `atom(a0: v0, ..., an: vn)`, collect each attribute, `a`, with value `v`, and `v` being a variable, and generate a [rename](pomo_ra#232-rename) operation against `rule_body`, that renames every attribute `name(v)` to `a`. The resulting expression will compute the output for the rule.
+
+TODO: add diagrams + examples for each of these steps

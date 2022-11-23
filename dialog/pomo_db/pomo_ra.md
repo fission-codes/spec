@@ -11,38 +11,103 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # Abstract
 
-The relational algebra forms a common compilation target for Datalog programs. This specification outlines the semantics of PomoRA, a representation of the relational algebra designed for use as a compilation target for high-level PomoDB query languages. It also describes PomoRA's operations in terms useful for further compilation to a runtime with support for incrementalization and recursive query processing.
+Relational algebra is the theory underpinning relational databases and the query languages against them. It provides a small core language of relational operators that serve as simple building blocks for more complex forms of query processing.
+
+This specification describes PomoRA, a representation of the relational algebra intended for use as an intermediate representation for PomoDB query languages.
 
 # 1. Introduction
 
-Relational algebra is the theory underpinning relational databases, and query languages against them. Like Datalog, it operates over relations as input, and produces relations as output. Unlike Datalog, it is unable to directly express recursive queries, and such programs must be implemented in terms of a more powerful runtime, such as [PomoFlow](pomo_flow.md).
+PomoRA is a simple embedding of the relational algebra, extended to support recursive queries.
 
-In the context of PomoDB, the relational algebra serves two purposes:
-1) Providing a small core language for further compilation to a runtime with support for recursive query processing
-2) Serving as a common intermediate representation for both queries written using familiar SQL-inspired DSLs, and for those written using richer, higher-level languages, like [PomoLogic](pomo_logic.md).
+In this way, PomoRA is able to serve as a compilation target for both queries using a familiar SQL-inspired syntax, and for those written using richer, higher-level languages, like [PomoLogic](pomo_logic.md).
 
-# 2. Operations
+Though implementations MAY directly evaluate PomoRA, it is RECOMMENDED that they instead make use of an efficient runtime designed for incremental evaluation, such as [PomoFlow](pomo_flow.md).
 
-An operator specifies an operation against a stream, and is represented by a node. Linear operators are unary operators which can be computed using only the deltas at the current timestamp, and can be compiled to efficient incremental operations. Similarly, bilinear operations are binary operators which are linear with respect to each argument.
+# 1.1 Notation
 
-All operators take some number of relations as input, transforming them into an output relation.
+This section briefly describes a high-level notation for discussing PomoRA, however implementations MAY define their own syntax for the language.
 
-| Name                                       | Linearity  | Arity |
-| ------------------------------------------ | ---------- | ----- |
-| [Projection](#21-projection)               | Linear     | 1     |
-| [Rename](#22-rename)                       | Linear     | 1     |
-| [Selection](#23-selection)                 | Linear     | 1     |
-| [Union](#24-union)                         | Linear     | N-ary |
-| [Difference](#25-difference)               | Non-Linear | 1     |
-| [Cartesian Product](#26-cartesian-product) | Bilinear   | 2     |
-| [Natural Join](#27-natural-join)           | Bilinear   | 2     |
-| [Theta Join](#28-theta-join)               | Bilinear   | 2     |
-| [Equijoin](#29-equijoin)                   | Bilinear   | 2     |
-| [Semijoin](#210-semijoin)                  | Bilinear   | 2     |
-| [Antijoin](#211-antijoin)                  | Bilinear   | 2     |
-| [Group By](#212-group-by)                  | Varies     | 1     |
+A PomoRA program is a [block](#block).
 
-## 2.1 Projection
+## Block
+
+Blocks are written as a sequence of statements:
+
+```
+S1;
+S2;
+...
+Sn;
+```
+
+Where each statement, `S1, ..., Sn`, ` is either an assignment, or it denotes a loop.
+
+## Assignment
+
+Assignment is written:
+
+```
+R :- E
+```
+
+Where `R` denotes a [relation](../README.md#22-relation), and `E` denotes an [operator](#23-operators) in PomoRA.
+
+## Loops
+
+Loops are written:
+
+TODO: Perhaps make the loop's exports explicit here? That isn't strictly necessary, but it does make the dataflow a bit clearer, and would simplify the translation to PomoFlow, because that information is easier to compute from PomoLogic, where everything is declarative
+
+```
+while change do
+  B
+end
+```
+
+Where `B` denotes an arbitrary [block](#block).
+
+## Expressions
+
+TODO: I'm not super clear on whether it's worth separating out the syntax for the expressions from the description of their semantics, because that leads to lots of duplication. I'll think about it.
+
+# 2. Semantics
+
+PomoRA extends the relational alegbra to support recursive queries by leveraging an inflationary semantics over a loop construct.
+
+A program is evaluated over a database, which can be modeled as a map from [relation](../README.md#22-relation) identifiers, to relations.
+
+Each statement is evaluated in sequence, modifying the database after each step.
+
+## 2.1 Assignment
+
+Assignment in PomoRA is inflationary: it inserts into the relation on the left the contents of the relation given by the expression on the right.
+
+This behavior is REQUIRED in order to guarantee termination of looping queries.
+
+## 2.2 Loops
+
+Loops evaluate over a subquery until a fixed point is achieved over all of the relations assigned to by the subquery.
+
+## 2.3 Operations
+
+Operations take some number of [relations](../README.md#22-relation) as input, transforming them into an output relation.
+
+| Name                                        | Arity |
+| ------------------------------------------- | ----- |
+| [Projection](#231-projection)               | 1     |
+| [Rename](#232-rename)                       | 1     |
+| [Selection](#233-selection)                 | 1     |
+| [Union](#234-union)                         | N-ary |
+| [Difference](#235-difference)               | 1     |
+| [Cartesian Product](#236-cartesian-product) | 2     |
+| [Natural Join](#237-natural-join)           | 2     |
+| [Theta Join](#238-theta-join)               | 2     |
+| [Equijoin](#239-equijoin)                   | 2     |
+| [Semijoin](#2310-semijoin)                  | 2     |
+| [Antijoin](#2311-antijoin)                  | 2     |
+| [Group By](#2312-group-by)                  | 1     |
+
+### 2.1.1 Projection
 
 A projection is a unary operation which is parameterized over a set of attribute names, and restricts the tuples in its input relation to the attributes given by these names.
 
@@ -62,7 +127,7 @@ projection([:id, :name], [
 ]
 ```
 
-## 2.2 Rename
+### 2.1.2 Rename
 
 A rename is a unary operation which is parameterized over a pair of attribute names, `(from, to)`, whose input relation contains an attribute named `from`, but does not contain an attribute named `to`. It returns a relation whose tuples are identical to those in the input, except the attribute given by `from` is renamed to `to`.
 
@@ -82,9 +147,9 @@ rename([foo: :bar], [
 ]
 ```
 
-## 2.3 Selection
+### 2.1.3 Selection
 
-A selection is a unary operation which is parameterized over a [propositional formula](#3-propositional-formula), and that returns the tuples in its input relation for which this formula holds.
+A selection is a unary operation which is parameterized over a [propositional formula](#22-propositional-formula), and that returns the tuples in its input relation for which this formula holds.
 
 For example:
 
@@ -103,7 +168,7 @@ selection(born < 1960, [
 ]
 ```
 
-## 2.4 Union
+### 2.1.4 Union
 
 A union is an n-ary operation which performs a set union over its input relations. All of the input relations must be union-compatible, by sharing the same set of attribute names.
 
@@ -155,7 +220,7 @@ union(rgb, cmy, roygbiv) <=> union(rgb, union(cmy, roygbiv))
                          <=> ...
 ```
 
-## 2.5 Difference
+### 2.1.5 Difference
 
 Difference is a binary operation which performs a set difference over its input relations. 
 
@@ -189,7 +254,7 @@ difference(roygbiv, rgb) => [
 ]
 ```
 
-## 2.6 Cartesian Product
+### 2.1.6 Cartesian Product
 
 A Cartesian product is a binary operation which computes all possible pairs between two input relations. The relations MUST have disjoint attributes, and the tuples in the resulting set are flattened.
 
@@ -231,7 +296,7 @@ cartesian_product(ranks, suits) => [
 
 ```
 
-## 2.7 Natural Join
+### 2.1.7 Natural Join
 
 A natural join is a binary operator which computes the set of all combinations of the tuples in its input relations, such that the values of any attributes common to both relations are equal.
 
@@ -259,11 +324,11 @@ natural_join(languages, web_frameworks) => [
 ]
 ```
 
-## 2.8 Theta Join
+### 2.1.8 Theta Join
 
-A theta join is a binary operator which is parameterized over a [propositional formula](#3-propositional-formula), and that computes the set of all combinations of tuples in its input relations which satisfy that formula. The relations MUST have disjoint attributes, and the tuples in the resulting set are flattened.
+A theta join is a binary operator which is parameterized over a [propositional formula](#22-propositional-formula), and that computes the set of all combinations of tuples in its input relations which satisfy that formula. The relations MUST have disjoint attributes, and the tuples in the resulting set are flattened.
 
-This operation is equivalent to composing a [selection](#23-selection) with a [Cartesian product](#26-cartesian-product), however implementations are RECOMMENDED to implement theta joins as a specialization of these operations, for performance reasons.
+This operation is equivalent to composing a [selection](#233-selection) with a [Cartesian product](#236-cartesian-product), however implementations are RECOMMENDED to implement theta joins as a specialization of these operations, for performance reasons.
 
 For example:
 
@@ -288,11 +353,11 @@ theta_join(budget_category_id = product_category_id and cost < budget, products)
 ]
 ```
 
-## 2.9 Equijoin
+### 2.1.9 Equijoin
 
-An equijoin is a binary operator which is parameterized over a [propositional formula](#3-propositional-formula), where the [propositional formula](#3-propositional-formula) only makes use of equality. It computes the set of all combinations of tuples in its input relations for which the given attribute names are equal. The relations MUST have disjoint attributes, and the tuples in the resulting set are flattened.
+An equijoin is a binary operator which is parameterized over a [propositional formula](#22-propositional-formula), where the [propositional formula](#22-propositional-formula) only makes use of equality. It computes the set of all combinations of tuples in its input relations for which the given attribute names are equal. The relations MUST have disjoint attributes, and the tuples in the resulting set are flattened.
 
-This operation MAY be implemented using [theta join](#28-theta-join), however it is RECOMMENDED that equijoins are specialized, for performance reasons.
+This operation MAY be implemented using [theta join](#238-theta-join), however it is RECOMMENDED that equijoins are specialized, for performance reasons.
 
 ```
 categories = [
@@ -315,11 +380,11 @@ equijoin(category_id = product_category_id, products) => [
 ]
 ```
 
-## 2.10 Semijoin
+### 2.1.10 Semijoin
 
 A semijoin is a binary operator which returns all tuples in its first input relation such that there is a tuple in its second relation for which the common attributes of both tuples are equal.
 
-This operation is equivalent to composing a [projection](#21-projection) again the first relation's attributes with a [natural join](#27-natural-join), however implementations are RECOMMENDED to implement semijoins as a specialization of these operations, for performance reasons.
+This operation is equivalent to composing a [projection](#231-projection) again the first relation's attributes with a [natural join](#237-natural-join), however implementations are RECOMMENDED to implement semijoins as a specialization of these operations, for performance reasons.
 
 For example:
 
@@ -341,13 +406,13 @@ semijoin(users, admins) [
 ]
 ```
 
-## 2.11 Antijoin
+### 2.1.11 Antijoin
 
 An antijoin is a binary operator which returns all tuples in its first input relation such that there is no tuple in its second relation for which the common attributes of both tuples are equal.
 
-This operation is equivalent to taking the [difference](#25-difference) of the first relation and the [semijoin](#210-semijoin) of both, however implementations are RECOMMENDED to implement antijoins as a specialization of these operations, for performance reasons.
+This operation is equivalent to taking the [difference](#235-difference) of the first relation and the [semijoin](#2310-semijoin) of both, however implementations are RECOMMENDED to implement antijoins as a specialization of these operations, for performance reasons.
 
-## 2.12 Group By
+### 2.1.12 Group By
 
 Group by is the mechanism by which aggregation is performed. Group by is performed over a relation with respect to a set of grouping attributes, and an aggregate function. The operation returns the set of tuples computed by first grouping the input relation, and then applying the aggregate function to each group.
 
@@ -382,9 +447,9 @@ group_by(
 ]
 ```
 
-# 3. Propositional Formula
+## 2.2 Propositional Formula
 
-Selection criterion for operations like [selection](#23-selection) and [theta joins](#28-theta-join) are specified in terms of a small subset of propositional logic.
+Selection criterion for operations like [selection](#233-selection) and [theta joins](#238-theta-join) are specified in terms of a small subset of propositional logic.
 
 A propositional formula is canonically represented in disjunctive normal form, as a disjunction of conjunctives:
 
@@ -412,70 +477,3 @@ select(formula, users) => [
     (id: 4, region: "South America", accepted_cookies: false)
 ]
 ```
-
-# 4. Compilation from PomoLogic
-
-TODO: I realize this is very verbose and that it can be simplified and broken up. I'll worry about that after the first pass through describing things :)
-
-TODO: I need to move some details from PomoLogic to here, so that PomoRA can reuse ideas like provenance, CIDs, time, and stratification
-
-The translation from [PomoLogic](pomo_logic.md) to a relational algebra query plan is straightforward, and can be performed by first compiling each rule in isolation, and then taking the [union](#24-union) of the query plans for any rules with matching head atoms.
-
-A rule is compiled by constructing a query plan from the terms within the rule's body, with respect to the rule's head. Such query plans are not unique, and implementations MAY define their own approach to query planning, but the semantics of the generated query plan MUST match the query plan generated using the following approach.
-
-First, for each unique variable, `var`, used in the rule's body, associate it with a unique name, `name(var)`. This name MUST NOT collide with any attributes on relations referenced by the rule.
-
-For example, given variables `x`, `y`, and `z`:
- - `name(x) => "var0"`
- - `name(y) => "var1"`
- - `name(z) => "var2"`
-
-Next, partition the predicates in the rule's body into four sets: `selections`, `aggregations`, `negations`, and `constraints`, each containing the terms of the respective predicate type.
-
-Now, for each predicate in `selections`, we have two cases:
-- `atom(a0: v0, ..., an: vn)`
-- `Var := atom(a0: v0, ..., an: vn)`
-
-In both cases, start by generating a [projection](#21-projection) operation against `atom`, for the attributes `a0, ..., an`. In the second case, additionally project against the control column `$CID`. Denote this operation by `source`.
-
-Then, for all attributes `a`, with value `v`, and `v` being a constant, generate a [propositional formula](#3-propositional-formula) made up of the conjunction of all such attributes being compared for equality against their associated value. If this formula contains any terms, then generate a [selection](#23-selection) against `source`, that filters by this formula, and denote the resulting relation by `source`.
-
-Now, for all attributes `a`, with value `v`, and `v` being a variable, if this set is non-empty, then generate a [rename](#22-rename) operation against `source`, that renames every attribute `a` to `name(v)`. If the CID of the relation is being bound to a variable, `var`, additionally rename `$CID` to `name(var)`. Store the resulting relation in a set denoted by `sources`.
-
-Next, fold over the relations in `sources`, using the first relation as the initial accumulator. For each pair of relations considered, `left` and `right`, there are three possibilities:
-1) `left` and `right` share no common attributes
-   - Return the [cartesian product](#26-cartesian-product) of `left` and `right` as the new accumulator
-2) The attributes of `right` are fully contained in the attributes of `left` (or the reverse is true)
-    - Return the [semijoin](#210-semijoin) of `left` and `right` as the new accumulator
-3) `left` and `right` share some common attributes
-    - Return the [natural join](#27-natural-join) of `left` and `right` as the new accumulator
-
-At the end of this process, the fold will have returned a relation corresponding to the joining of all positive terms in the rule's body. Denote that relation `rule_body`.
-
-Then, compile `constraints` to a single [propositional formula](#3-propositional-formula), `prop_constraints`, made up of the conjunction of all constraints, such that all variables, `var`, are replaced with `name(var)`.
-
-For example:
- - `[x <= 5] => name(x) <= 5`
- - `[x <= y, y = 5] => name(x) <= name(y) AND name(y) = 5`
-
- If `prop_constraints` is non-empty, then generate a [selection](#23-selection) against `rule_body` using `prop_constraints` as its formula. Denote the resulting relation as the new `rule_body`.
-
- Now, for each predicate in `negations`, `!atom(a0: v0, ..., an: vn)`, start by generating a [projection](#21-projection) operation against `atom`, for the attributes `a0, ..., an`. Denote the resulting relation as `negated_relation`.
-
- Then, for all attributes `a`, with value `v`, and `v` being a constant, generate a [propositional formula](#3-propositional-formula) made up of the conjunction of all such attributes being compared for equality against their associated value. If this formula contains any terms, then generate a [selection](#23-selection) against `negation`, that filters by this formula, and denote the resulting relation by `negated_relation`.
-
- Now, for all attributes `a`, with value `v`, and `v` being a variable, if this set is non-empty, then generate a [rename](#22-rename) operation against `negated_relation`, that renames every attribute `a` to `name(v)`. Store the resulting relation in a set denoted by `negated_relations`.
-
-Next, fold over the relations in `negated_relations`, using `rule_body` as the initial accumulator. For each pair of relations considered, `negated_relation` and `accumulator`, return an [antijoin](#211-antijoin) between `accumulator` and `negated_relation` as the new accumulator.
-
-At the end of this process, the fold will have returned a relation corresponding to the joining of all positive terms in the rule's body, the selection of any constraints, along with the negation of all negative terms in the rule's body. Denote that relation `rule_body`.
-
-TODO: aggregation
-
-Next, from the rule's head, `atom(a0: v0, ..., an: vn)`, collect each attribute, `a`, with value `v`, and `v` being a variable, and generate a [rename](#22-rename) operation against `rule_body`, that renames every attribute `name(v)` to `a`. The resulting relation will contain the output for the rule.
-
-Now, taking the [union](#24-union) of all rules which share a head relation will give the query plan for that relation.
-
-Lastly, [stratify](pomo_logic.md#133-stratification) each of these relations and partition the query plans by the strata they belong to.
-
-TODO: add diagrams + examples for each of these steps
