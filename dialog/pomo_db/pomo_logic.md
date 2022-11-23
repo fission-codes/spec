@@ -187,7 +187,7 @@ A program may have multiple valid stratifications, if one exists, but the choice
    2) Contract each strongly connected component in `G` to a single vertex, and add it to `C(G)`
    3) For any two distinct strongly connected components in `G`, `c1` and `c2`, if there exists an edge from a vertex in `c1` to a vertex in `c2`, then add a directed edge between the corresponding vertices for `c1` and `c2` in `C(G)`
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
-4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time), and these rules MAY be implemented using [sinks](#27-sinks)
+4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time), and these rules MAY be implemented using [sinks](../README.md#27-sinks)
 
 Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using PomoLogic.
 
@@ -195,9 +195,9 @@ Such a stratification is only valid if for every strongly connected component in
 
 Evaluation of PomoLogic proceeds in [timesteps](#21-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#23-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
-Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](#26-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
+Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](../README.md#26-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
 
-Upon evaluating all strata to a fixed point, the program's [sinks](#27-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
+Upon evaluating all strata to a fixed point, the program's [sinks](../README.md#27-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
 
 When evaluating a stratum, rules MAY be evaluated in any order.
 
@@ -356,24 +356,6 @@ diagonal(x: 1, y: 1)
 diagonal(x: 1, y: 2)
 diagonal(x: 2, y: 2)
 ```
-
-## 2.6 Sources
-
-Sources introduce tuples from the outside world to a running PomoLogic program. They do so at the beginning of each epoch.
-
-Implementations MAY define their own sources, but sources SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
-
-Sources MAY emit deltas of tuples, if the PomoLogic implementation is able to take advantage of incremental computation.
-
-Implementations MAY also support user defined sources, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
-
-## 2.7 Sinks
-
-Sinks process derived tuples at the end of each epoch.
-
-Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
-
-Implementations MAY also support user defined sinks, such as to facilitate the integration of PomoLogic into external systems for persistence or communication.
 
 # 3. Compilation to PomoRA
 

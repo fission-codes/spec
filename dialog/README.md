@@ -98,6 +98,7 @@ These properties are further leveraged in the design and use of byzantine-fault 
 
 TODO: Update CRDT link once that info is described somewhere
 
+
 ## 2.4 Provenance Tracking
 
 TODO: https://discord.com/channels/478735028319158273/1033502043656171561/1035339517021921280
@@ -110,6 +111,24 @@ Implementations MAY define their own user-facing query language, but they are RE
 
 An OPTIONAL Datalog variant, named [PomoLogic](pomo_db/pomo_logic.md), is also described, along with an OPTIONAL runtime for PomoRA, named [PomoFlow](pomo_db/pomo_flow.md).
 
-## 2.6 Storage
+## 2.6 Sources
+
+Sources introduce tuples from the outside world to a running PomoDB query, and can be queried as if they were [relations](#22-relation).
+
+Implementations MAY define their own sources, but sources SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
+
+Sources MAY emit deltas of tuples, if a runtime able to take advantage of incremental computation is being used, like [PomoFlow](pomo_db/pomo_flow.md).
+
+Implementations MAY also support user defined sources, such as to facilitate the integration of PomoDB into external systems for persistence or communication.
+
+## 2.7 Sinks
+
+Sinks handle derived tuples for further processing by the outside world, and can be inserted into as if they were [relations](#22-relation).
+
+Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
+
+Implementations MAY also support user defined sinks, such as to facilitate the integration of PomoDB into external systems for persistence or communication.
+
+## 2.8 Storage
 
 TODO: Introduce + link Brooke's upcoming work on persistence + encryption
