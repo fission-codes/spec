@@ -98,7 +98,6 @@ These properties are further leveraged in the design and use of byzantine-fault 
 
 TODO: Update CRDT link once that info is described somewhere
 
-
 ## 2.4 Provenance Tracking
 
 TODO: https://discord.com/channels/478735028319158273/1033502043656171561/1035339517021921280
@@ -111,9 +110,23 @@ Implementations MAY define their own user-facing query language, but they are RE
 
 An OPTIONAL Datalog variant, named [PomoLogic](pomo_db/pomo_logic.md), is also described, along with an OPTIONAL runtime for PomoRA, named [PomoFlow](pomo_db/pomo_flow.md).
 
-## 2.6 Sources
+## 2.6 Query Evaluation
 
-Sources introduce tuples from the outside world to a running PomoDB query, and can be queried as if they were [relations](#22-relation).
+In every runtime, evaluation of PomoDB queries proceeds in timesteps, called epochs, which each compute a least fixed point over a batch of changes to the database.
+
+The details behind this computation are runtime specific, however all runtimes MUST provide the following additional guarantees.
+
+Each epoch is denoted by the timestamp succeeding the last, and begins by scheduling the program's [sources](#27-sources) for evaluation. These sources MAY run in any order, however any operations over their resulting contents MUST be deferred until their completion.
+
+Upon computing a relation's fixed point, any [sinks](#28-sinks) over that relation SHOULD be scheduled to run over the relation's contents, and evaluation of those sinks MUST be completed before evaluating the next epoch.
+
+PomoDB queries MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the database, wherever possible. [PomoFlow](pomo_flow.md) is an OPTIONAL runtime with such capabilities.
+
+## 2.7 Sources
+
+Sources act as ingress points for a PomoDB query, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
+
+Sources can be queried as if they were [relations](#22-relation).
 
 Implementations MAY define their own sources, but sources SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
@@ -121,14 +134,16 @@ Sources MAY emit deltas of tuples, if a runtime able to take advantage of increm
 
 Implementations MAY also support user defined sources, such as to facilitate the integration of PomoDB into external systems for persistence or communication.
 
-## 2.7 Sinks
+## 2.8 Sinks
 
-Sinks handle derived tuples for further processing by the outside world, and can be inserted into as if they were [relations](#22-relation).
+Sinks act as egress points for a PomoDB query, and emit tuples to the outside world for further processing or storage.
+
+Sinks can be inserted into as if they were [relations](#22-relation).
 
 Implementations MAY define their own sinks, but sinks SHOULD be non-blocking, and are RECOMMENDED to perform any blocking or IO-intensive operations asynchronously.
 
 Implementations MAY also support user defined sinks, such as to facilitate the integration of PomoDB into external systems for persistence or communication.
 
-## 2.8 Storage
+## 2.9 Storage
 
 TODO: Introduce + link Brooke's upcoming work on persistence + encryption
