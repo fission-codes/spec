@@ -82,9 +82,9 @@ Where `a1, a2, ..., an` give the names of each attribute, and `v1, v2, ..., vn` 
 
 ### 2.2.1 CID Attribute
 
-Each tuple within a relation also has a content identifier (CID), as described in the specification for [PomoLogic](pomo_db/pomo_logic.md#132-content-addressing).
+Each tuple within a relation also has a [content identifier](#23-content-addressing) (CID).
 
-This CID can be accessed through a special control attribute that this document will denote as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
+This CID can be accessed through a special control attribute denoted as `$CID`: however implementations are RECOMMENDED to use their type system to differentiate between such attributes.
 
 ## 2.3 Content Addressing
 
