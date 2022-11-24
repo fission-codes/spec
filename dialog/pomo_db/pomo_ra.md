@@ -72,7 +72,7 @@ TODO: I'm not super clear on whether it's worth separating out the syntax for th
 
 # 2. Semantics
 
-PomoRA extends the relational alegbra to support recursive queries by leveraging an inflationary semantics over a loop construct.
+PomoRA extends the relational algebra to support recursive queries by leveraging an inflationary semantics over a loop construct.
 
 A program is evaluated over a database, which can be modeled as a map from [relation](../README.md#22-relation) identifiers, to relations.
 
