@@ -189,7 +189,7 @@ A program may have multiple valid stratifications, if one exists, but the choice
    2) Contract each strongly connected component in `G` to a single vertex, and add it to `C(G)`
    3) For any two distinct strongly connected components in `G`, `c1` and `c2`, if there exists an edge from a vertex in `c1` to a vertex in `c2`, then add a directed edge between the corresponding vertices for `c1` and `c2` in `C(G)`
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
-4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time), and these rules MAY be implemented using [sinks](../README.md#28-sinks)
+4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time)
 
 Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using PomoLogic.
 
