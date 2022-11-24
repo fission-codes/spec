@@ -112,7 +112,7 @@ TODO: Update CRDT link once that info is described somewhere
 
 ## 2.5 Provenance Tracking
 
-TODO: https://discord.com/channels/478735028319158273/1033502043656171561/1035339517021921280
+TODO: [See notes](https://discord.com/channels/478735028319158273/1033502043656171561/1035339517021921280)
 
 ## 2.6 Query Engine
 

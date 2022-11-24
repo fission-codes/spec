@@ -191,7 +191,7 @@ Such a stratification is only valid if for every strongly connected component in
 
 ## 2.4 Evaluation
 
-Evaluation of PomoLogic extends PomoDB's [evaluation semantics](../README.md#27-evaluation) with some additional invariants.
+Evaluation of PomoLogic extends PomoDB's [evaluation semantics](../README.md#27-evaluation) with some additional guarantees.
 
 While the evaluation order for PomoLogic queries is generally unspecified, each epoch MUST be evaluated in [stratum order](#23-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
