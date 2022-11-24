@@ -119,6 +119,8 @@ PomoLogic follows a least fixed point semantics for Datalog, with stratified neg
 
 ## 2.1 Time
 
+TODO: split some of this into the top-level spec to share between runtimes
+
 Unlike many variants of Datalog, PomoLogic operates over a changing database, and the query engine internally models the progression of time as the database changes. Importantly, this notion of time forms a logical clock which holds no meaning to any other instances of PomoLogic.
 
 The database state is then modeled as a function of time and the program under evaluation, but this computation is intentionally left unspecified, and implementations are free to make their own choices according to their performance constraints and desired features, subject to the following semantics.
@@ -187,17 +189,15 @@ A program may have multiple valid stratifications, if one exists, but the choice
    2) Contract each strongly connected component in `G` to a single vertex, and add it to `C(G)`
    3) For any two distinct strongly connected components in `G`, `c1` and `c2`, if there exists an edge from a vertex in `c1` to a vertex in `c2`, then add a directed edge between the corresponding vertices for `c1` and `c2` in `C(G)`
 3) Perform a topological sort on `C(G)`: the resulting ordering gives the stratification of `P`, with each vertex in `C(G)`, `c`, corresponding to a stratum containing the rules in `P` whose head belongs to the strongly connected component of `G` for which `c` is associated
-4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time), and these rules MAY be implemented using [sinks](../README.md#27-sinks)
+4) Append a new stratum to the end, containing all inductive rules. This last stratum corresponds to a [modular stratification over time](#21-time), and these rules MAY be implemented using [sinks](../README.md#28-sinks)
 
 Such a stratification is only valid if for every strongly connected component in `G`, no edge within that component is labelled with negative polarity. Intuitively, this prevents the use of negation or aggregation through recursive application of rules. Such programs are considered cannot be stratified, and therefore cannot be represented using PomoLogic.
 
 ## 2.4 Evaluation
 
-Evaluation of PomoLogic proceeds in [timesteps](#21-time), called epochs, which each compute a least fixed point over a batch of changes to the EDB. At each epoch, the program is evaluated in [stratum order](#23-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
+Evaluation of PomoLogic extends PomoDB's [evaluation semantics](../README.md#26-query-evaluation) with some additional invariants.
 
-Each epoch is denoted by the timestamp succeeding the last, and begins by evaluating the program's [sources](../README.md#26-sources). These act as ingress points for the program, and introduce tuples from the outside world, such as by loading them from a local persistence layer, or by querying them from a remote data source such as IPFS.
-
-Upon evaluating all strata to a fixed point, the program's [sinks](../README.md#27-sinks) are evaluated against the current EDB and IDB. These act as egress points for the program, and emit tuples to the outside world for further storage or processing.
+While the evaluation order for PomoLogic queries is generally unspecified, each epoch MUST be evaluated in [stratum order](#23-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
 When evaluating a stratum, rules MAY be evaluated in any order.
 
@@ -205,8 +205,6 @@ Similarly, when evaluating a rule, predicates MAY be reordered, subject to the f
 - Negation predicates MUST NOT be evaluated until after their atom is fully grounded
 - Aggregation predicates MUST NOT be evaluated until any bindings they share with the rule's body are fully grounded
 - Constraint predicates MUST NOT be evaluated until both terms are grounded
-
-PomoLogic MAY be implemented over incremental computations, in which case each epoch is RECOMMENDED to operate over deltas of the EDB, wherever possible. A recommended runtime in terms of a [dataflow model](pomo_flow.md) is provided.
 
 ## 2.5 Predicates
 
