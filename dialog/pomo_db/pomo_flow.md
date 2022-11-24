@@ -25,7 +25,7 @@ The design is based on ideas from Differential Dataflow, and is heavily inspired
 
 ## 2.1 ZSet
 
-A set of elements, each associated with a [weight](#24-weight) and [timestamp](#25-timestamp).
+A set of elements, each associated with a [weight](#24-weight) and [timestamp](#25-time).
 
 ZSets can be written as lists of triples:
 
@@ -43,7 +43,7 @@ Some operations return ZSets without timestamp information, and implementations 
 
 ## 2.2 Indexed ZSet
 
-A set of key-value pairs, each associated with a [weight](#24-weight) and [timestamp](#25-timestamp).
+A set of key-value pairs, each associated with a [weight](#24-weight) and [timestamp](#25-time).
 
 Indexed ZSets can be written as lists of triples:
 
@@ -81,13 +81,13 @@ Implementations MUST support efficient sequential access of traces, first by key
 
 An integer associated with each element of a ZSet. Positive weights indicate the number of derivations of that element within the ZSet, and negative weights indicate the number of deletions of that element.
 
-## 2.5 Timestamp
+## 2.5 Time
 
-Every iteration of a [circuit](#26-circuit) is associated with a timestamp, and computed values are associated with the timestamp from which they were derived.
+PomoFlow represents [timestamps](../README.md#23-time) for the root circuit using a counter which denotes the current epoch.
 
-Timestamps MUST be represented using a partial order, such that subsequent iterations of the same [circuit](#26-circuit) have subsequent timestamps, and the timestamps of recursive subcircuits are given by refinements of the parent circuit's timestamp that allow iterations of that subcircuit to be distinguished and filtered according to that timestamp, called its epoch.
+Every recursive subcircuit refines its parent's timestamp using a pair which further associates that timestamp with the iteration count through the subcircuit. These pairs are ordered using product order.
 
-Implementations MAY represent timestamps for the root circuit as an integer, and timestamps for subcircuits as a pair constructed from their parent's timestamp, and an integer, and ordered using product order.
+Implementations MUST represent both epochs and iteration counts as an unsigned integer.
 
 For example, a root circuit may progress through the following timestamps:
 
@@ -385,7 +385,7 @@ Note that because operator computes the delta of [Distinct](#293-distinct-operat
 
 Distinct is not a linear operation, and requires access to the entire history of updates, however there's a few observations that can reduce the search space of timestamps to examine.
 
-Consider evaluating the operator at some [timestamp](#25-timestamp) `t = (e, i)`, where `e` denotes the epoch, and `i` denotes the iteration.
+Consider evaluating the operator at some [timestamp](#25-time) `t = (e, i)`, where `e` denotes the epoch, and `i` denotes the iteration.
 
 Then there are two possible classes of elements which may be returned:
 1) Elements in the current input ZSet

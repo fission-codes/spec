@@ -119,11 +119,7 @@ PomoLogic follows a least fixed point semantics for Datalog, with stratified neg
 
 ## 2.1 Time
 
-TODO: split some of this into the top-level spec to share between runtimes
-
-Unlike many variants of Datalog, PomoLogic operates over a changing database, and the query engine internally models the progression of time as the database changes. Importantly, this notion of time forms a logical clock which holds no meaning to any other instances of PomoLogic.
-
-The database state is then modeled as a function of time and the program under evaluation, but this computation is intentionally left unspecified, and implementations are free to make their own choices according to their performance constraints and desired features, subject to the following semantics.
+PomoLogic imposes additional constraints over PomoDB's concept of [time](../README.md#23-time).
 
 First, let `P` be some PomoLogic program, let `next(t)` denote the smallest timestamp `t'`, such that `t < t'`, and let `IDB(t, p)` denote the IDB at time `t`.
 
@@ -195,7 +191,7 @@ Such a stratification is only valid if for every strongly connected component in
 
 ## 2.4 Evaluation
 
-Evaluation of PomoLogic extends PomoDB's [evaluation semantics](../README.md#26-query-evaluation) with some additional invariants.
+Evaluation of PomoLogic extends PomoDB's [evaluation semantics](../README.md#27-evaluation) with some additional invariants.
 
 While the evaluation order for PomoLogic queries is generally unspecified, each epoch MUST be evaluated in [stratum order](#23-stratification), by evaluating all rules within each stratum to a fixed point before evaluating the next stratum. A fixed point occurs when further applications of a rule against the current EDB and IDB do not result in the derivation of new tuples.
 
