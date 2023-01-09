@@ -68,6 +68,8 @@ Roadmap
 Runtime
 SCCs
 Semijoin
+SLA
+SLAs
 Tele
 TODO
 TLS
@@ -84,6 +86,7 @@ WebNative
 WebRTC
 WebSockets
 XXH
+XXXX
 Yesod
 ZSet
 ZSets
@@ -98,6 +101,7 @@ bilinear
 bilinearity
 boolean
 booleans
+bugfixes
 cartesian
 checkbox's
 cmy
@@ -120,9 +124,13 @@ expressivity
 fn
 frac
 frontends
+gist
+gists
 heterogenous
 hoc
 impactful
+implementer
+implementers
 incrementalization
 incrementalized
 incrementalizing
@@ -133,11 +141,14 @@ ipfs
 iteratively
 labelled
 libp
+lifecycle
 ln
 mTLS
 memoization
+observability
 optimality
 persistence
+pre
 preorder
 probabilistically
 requestor
