@@ -12,8 +12,10 @@ necessary reviewers:
 
 ### Introduction
 
+<!--
 One paragraph explanation of the feature(s), change(s), or addition(s) being
 proposed. A diagram can often be helpful here.
+-->
 
 ---
 
