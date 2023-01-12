@@ -24,16 +24,14 @@ technologies.
 
 _Directory Structure_ example:
 
-```
-|_ spec
-  |_ rfcs
-    |_ Why-Chocolate-Cake-Is-Best
-      |_ RFC.md
-      |_ diagrams
-        |_ cake.png
-    |_ README.md
-    |_ template.md
-```
+└── spec
+     ├── rfcs
+     │    ├── Why-Chocolate-Cake-Is-Best
+     │    ├── RFC.md
+     │    └── diagrams
+     │         └── cake.png
+     ├── README.md
+     └── template.md
 
 ### Introduction to RFCs
 
