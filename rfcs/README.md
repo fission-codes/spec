@@ -2,7 +2,7 @@
 
 This introduction should provide you everything you need to get you started in
 the wonderful world of RFCs at Fission. Read on to discover how our organization
-handles proposals for additions and changes to the p# RFCs at Fission
+handles proposals for additions and changes to RFCs at Fission.
 
 This introduction should provide you everything you need to get you started in
 the wonderful world of RFCs at Fission. Read on to discover how our organization
