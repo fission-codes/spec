@@ -4,18 +4,10 @@ authors:
 
 - `[Author1](Github Link for Author)`
 
-necessary reviewers:
-
-- [ ] Reviewer 1
-- [ ] Reviewer 2
-- [ ] Reviewer 3
-
 ### Introduction
 
-<!--
 One paragraph explanation of the feature(s), change(s), or addition(s) being
 proposed. A diagram can often be helpful here.
--->
 
 ---
 

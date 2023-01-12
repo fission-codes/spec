@@ -2,6 +2,10 @@
 
 This introduction should provide you everything you need to get you started in
 the wonderful world of RFCs at Fission. Read on to discover how our organization
+handles proposals for additions and changes to the p# RFCs at Fission
+
+This introduction should provide you everything you need to get you started in
+the wonderful world of RFCs at Fission. Read on to discover how our organization
 handles proposals for additions and changes to the projects and associated
 technologies.
 
@@ -24,6 +28,7 @@ technologies.
 
 _Directory Structure_ example:
 
+```
 └── spec
      ├── rfcs
      │    ├── Why-Chocolate-Cake-Is-Best
@@ -32,6 +37,7 @@ _Directory Structure_ example:
      │         └── cake.png
      ├── README.md
      └── template.md
+```
 
 ### Introduction to RFCs
 
@@ -107,10 +113,10 @@ An RFC moves through stages as part of its lifecycle. These are:
 
 - `Draft`: pre-discussion draft of the proposal. Our recommendation is you write
   a short draft as quickly as possible and get your project's members to
-  help you shape it into a discussion-ready RFC.
-  Your RFC exists as a **draft PR** against `main`.
-- `Discussion`: active review and conversation. Your RFC exists as a
-  **ready to review PR** against `main`.
+  help you shape it into a discussion-ready RFC. Your RFC exists as a
+  **draft PR** against `main`.
+- `Discussion`: active review and conversation among interested parties. Your
+  RFC exists as a **ready to review PR** against `main`.
 - `Published`: the RFC has been accepted, merged into `main`, and is ready for
   work.
 - `Abandoned`: the RFC had no activity for more than 30 days. The associated PR
@@ -118,8 +124,6 @@ An RFC moves through stages as part of its lifecycle. These are:
 - `Suspended`: during the RFC process, the engaged parties determined that
   though the proposal might be a good idea, it's not the right time for it. The
   PR can be marked `Suspended` and returned to later.
-- `Rejected`: a consensus was reached that this was not the right solution for
-  the problem. The associated PR will be marked `Rejected`.
 
 During the `Draft` and `Discussion` stages of an RFC, it may be helpful to write
 prototypes or gists to better convey a line of thinking.
@@ -129,10 +133,11 @@ Once an RFC merged into `main`, it's considered `Published`.
 ### On Timing and Interaction
 
 Once your RFC is ready for discussion, engage with and notify any interested
-parties over discord, etc. **Sell what you're building**. If an RFC sits in
-`Draft` or `Discussion` for more than 30 days without feedback or clarity, it
-will be updated with an `Abandoned` label and the PR will be closed until the
-author(s) picks it back up again.
+parties over discord and tag them as the [**required reviewers on a PR**][pr-review].
+**Sell what you're building**. If an RFC sits in `Draft` or `Discussion` for
+more than 30 days without feedback or clarity, it will be updated with an
+`Abandoned` label and the PR will be closed until the author(s) picks it back up
+again.
 
 #### For Reference
 
@@ -146,6 +151,7 @@ please check out these references:
 [design-docs-google]: https://www.industrialempathy.com/posts/design-docs-at-google/
 [draft-prs]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
 [oxide-rfd]: https://oxide.computer/blog/rfd-1-requests-for-discussion/
+[pr-review]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review
 [pr-stage]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request
 [rust-rfcs]: https://github.com/rust-lang/rfcs
 [template]: ./template.md

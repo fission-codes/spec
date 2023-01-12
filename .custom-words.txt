@@ -62,6 +62,7 @@ PomoLogic's
 Prolog
 Qri's
 Ramen
+README
 RESTful
 Requestor's
 Roadmap
@@ -143,16 +144,19 @@ labelled
 libp
 lifecycle
 ln
+md
 mTLS
 memoization
 observability
 optimality
 persistence
+png
 pre
 preorder
 probabilistically
 requestor
 resampling
+rfcs
 rgb
 roygbiv
 runtime
