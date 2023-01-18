@@ -26,7 +26,7 @@ Note the absence of a field for the requested URL. Since multiple CID roots MAY 
 
 #### 1.1.1 `stream` Parameter
 
-This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over HLS.
+This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5).
 
 ## 1.2 Requestor Payload
 
@@ -63,7 +63,7 @@ POST /api/v0/dag/push?stream={bool}&diff={ipns | dnslink | cid}
 
 ### 2.1.1 `stream` Parameter
 
-This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over HLS.
+This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5).
 
 ### 2.1.2 `diff` Parameter
 
