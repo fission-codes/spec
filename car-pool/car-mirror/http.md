@@ -26,7 +26,7 @@ Note the absence of a field for the requested URL. Since multiple CID roots MAY 
 
 #### 1.1.1 `stream` Parameter
 
-This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5).
+This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5).  Both the Requestor and Provider MUST use [HTTP/2](https://datatracker.ietf.org/doc/html/rfc7540).
 
 ## 1.2 Requestor Payload
 
