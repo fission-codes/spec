@@ -29,7 +29,7 @@ We propose developing a transport agnostic CAR-based synchronization mechanism, 
 
 This proposal resolves multiple major, persistent challenges that numerous production IPFS operators have experienced. We believe the scope of this work to be an important stepping stone in the maturation of IPFS and Filecoin in production settings.
 
-We propose extending the existing efforts to move specifically CAR files over HTTP (e.g. Filecoin point-to-point CAR, Qri’s DSync), and enable other transports such as WSS, HLS, and WebRTC. We know of several other projects in the broader ecosystem that would like to make use of this protocol, from storage providers and CDNs to decentralized social media protocols.
+We propose extending the existing efforts to move specifically CAR files over HTTP (e.g. Filecoin point-to-point CAR, Qri’s DSync), and enable other transports such as [WSS](https://datatracker.ietf.org/doc/html/rfc6455), [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5), and [WebRTC](https://datatracker.ietf.org/doc/html/rfc8835). We know of several other projects in the broader ecosystem that would like to make use of this protocol, from storage providers and CDNs to decentralized social media protocols.
 
 IPLD (and content addressing broadly) has an incredible advantage over conventional RESTful transfers: IPLD can easily deduplicate data. We strongly desire to retain this property. At Fission, our in-house file system (WNFS) is immutable-by-default. Uploading many redundant gigabytes for a small change is not practical.
 
@@ -41,11 +41,11 @@ Further, due to the Want List behavior being session agnostic, we have observed 
 
 ### HTTPS & WSS Are Mature Transports
 
-Streaming CAR files know that there is an open connection over a reliable, mature transport: HTTP, Streaming HTTP, and persistent WSS. Being able to efficiently push and fetch IPLD in CAR files over HTTP in particular means gaining the ability to move data over a mature, absolutely ubiquitous transport on privileged ports.
+Streaming CAR files know that there is an open connection over a reliable, mature transport: HTTP, [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5), and persistent [WSS](https://datatracker.ietf.org/doc/html/rfc6455). Being able to efficiently push and fetch IPLD in CAR files over HTTP in particular means gaining the ability to move data over a mature, absolutely ubiquitous transport on privileged ports.
 
 Relying on HTTP also makes TLS available everywhere, improving the security and privacy of messages. Since the proposed protocol does not depend on the public DHT (see Scope section), this provides some improvement even with public providers. The lack of dependence on the public DHT is well suited to short-lived nodes, such as browsers, GitHub Actions, and battery-sensitive devices such as mobile phones.
 
-It is worth highlighting that HTTP is unable to support many P2P use cases, and many client devices are not directly dialable as data providers. Those use cases will need continued dependence on WebRTC and similar. These strategies can run entirely in parallel, and are in no way mutually exclusive. A node being undialable leads to some difficulty in the design of this system, but even under these conditions, CAR protocols can be constructed that perform better than the naive case.
+It is worth highlighting that HTTP is unable to support many P2P use cases, and many client devices are not directly dialable as data providers. Those use cases will need continued dependence on [WebRTC](https://datatracker.ietf.org/doc/html/rfc8835) and similar. These strategies can run entirely in parallel, and are in no way mutually exclusive. A node being undialable leads to some difficulty in the design of this system, but even under these conditions, CAR protocols can be constructed that perform better than the naive case.
 
 ### Deduplication
 

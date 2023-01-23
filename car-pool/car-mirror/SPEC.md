@@ -85,7 +85,7 @@ Whether a peer can initiate contact with a particular node. For example, a web b
 
 ## 2.2.1 Streaming CAR
 
-A CAR file can be expressed as a streaming data structure, and transmitted over [HTTP Live Streaming](https://datatracker.ietf.org/doc/html/rfc8216), [WebSockets](https://www.rfc-editor.org/rfc/rfc6455.html) or similar.
+A CAR file can be expressed as a streaming data structure, and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5), [WebSockets](https://datatracker.ietf.org/doc/html/rfc6455) or similar.
 
 ## 2.3 Session
 
@@ -103,7 +103,7 @@ Each round of communication will have fewer stragglers. There is a degenerate ca
 
 # 3. Transport
 
-The protocol here is described in discrete rounds. When run over fully bidirectional transports such as WSS, portions of rounds may be updated live rather than waiting for an arbitrary "round" to complete. Unidirectional transports like HTTP proceed in clear, distinct rounds. Discrete rounds are given below both because many transports require this mode, and because it is easier to explain in structured steps, even if not a hard requirement.
+The protocol here is described in discrete rounds. When run over fully bidirectional transports such as [WSS](https://datatracker.ietf.org/doc/html/rfc6455), portions of rounds may be updated live rather than waiting for an arbitrary "round" to complete. Unidirectional transports like HTTP proceed in clear, distinct rounds. Discrete rounds are given below both because many transports require this mode, and because it is easier to explain in structured steps, even if not a hard requirement.
 
 ## 3.1 Phases
 

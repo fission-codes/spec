@@ -33,7 +33,6 @@ Equijoin
 FPP
 Filecoin
 Golang
-HLS
 HTTPS
 Herbrand
 Holmgren
