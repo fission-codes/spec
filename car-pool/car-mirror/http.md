@@ -40,7 +40,7 @@ This field specifies if the Provider should use discrete or streaming. `stream` 
 The requestor payload MUST be serialized as [CBOR]. 
 
 ```ipldsch
-type PullPayload struct {
+type PullRequest struct {
   rs [Link]  -- Requested CID roots
   bk Integer -- Bloom filter hash count
   bb Bytes   -- Bloom filter Binary
