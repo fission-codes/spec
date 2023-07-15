@@ -26,17 +26,17 @@ Note the absence of a field for the requested URL. Since multiple CID roots MAY 
 
 #### 1.1.1 `stream` Parameter
 
-This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5).  Both the Requestor and Provider MUST use [HTTP/2](https://datatracker.ietf.org/doc/html/rfc7540).
+This field specifies if the Provider should use discrete or streaming. `stream` MUST default to `false`. If streaming is set to `true`, the response MUST be a streaming CAR file and transmitted over [HTTP Streaming](https://datatracker.ietf.org/doc/html/rfc7540#section-5). Both the Requestor and Provider MUST use [HTTP/2](https://datatracker.ietf.org/doc/html/rfc7540).
 
 ## 1.2 Requestor Payload
 
-The requestor payload MUST be serialized as [CBOR](https://cbor.io/). This schema is given in [CDDL (RFC8601)](https://datatracker.ietf.org/doc/html/rfc8610).
+The requestor payload MUST be serialized as [CBOR](https://cbor.io/). 
 
-```cddl
-payload = {
-  rs: [* cid], ; Requested CID roots
-  bk: uint,    ; Bloom filter hash count
-  bb: bytes,   ; Bloom filter Binary
+```ipldsch
+type PullPayload struct {
+  rs [Link]  -- Requested CID roots
+  bk Integer -- Bloom filter hash count
+  bb Bytes   -- Bloom filter Binary
 }
 ```
 
@@ -77,25 +77,25 @@ This field MUST NOT be interpreted as a CID root being sent.
 
 ## 2.2 Requestor Payload
 
-```cddl
-payload = {
-  bk : uint,  ; Bloom filter hash count
-  bb : bytes, ; Bloom filter Binary
-  pl : car,   ; Data payload
-}
+```ipldsch
+type ReqPayload struct {
+  bk Integer -- Bloom filter hash count
+  bb Bytes   -- Bloom filter Binary
+  pl CarFile -- Data payload
+} representation tuple
 ```
 
 The data payload MUST be given as a [CARv1](https://ipld.io/specs/transport/car/carv1/). If the streaming flag was set in the URL, then the CAR MUST be a [streaming CARv1](https://ipld.io/specs/transport/car/carv1/#performance).
 
 ## 2.3 Provider Payload
 
-The requestor payload MUST be serialized as [CBOR](https://cbor.io/). This schema is given in [CDDL (RFC8601)](https://datatracker.ietf.org/doc/html/rfc8610).
+The requestor payload MUST be serialized as [CBOR](https://cbor.io/).
 
-```cddl
-payload = {
-  sr : [* cid], ; Incomplete subgraph roots
-  bk : uint,    ; Bloom filter hash count
-  bb : bytes,   ; Bloom filter Binary
+```ipldsch
+type ProvPayload struct {
+  sr [Link]  -- Incomplete subgraph roots
+  bk Integer -- Bloom filter hash count
+  bb Bytes   -- Bloom filter Binary
 }
 ```
 
