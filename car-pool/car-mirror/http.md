@@ -84,27 +84,25 @@ This field MUST NOT be interpreted as a CID root being sent.
 
 ## 2.2 Requestor Payload
 
-The requestor payload MUST be serialized as [CBOR].
+```ipldsch
+type UploadRequest struct {
+  bk Integer -- Bloom filter hash count
+  bb Bytes   -- Bloom filter Binary
+  pl CARv1   -- Data payload
+} representation tuple
+```
+
+The data payload (`pl`) MUST be encoded as a [CARv1]. If the streaming flag was set in the URL, then the CAR MUST be a [streaming CARv1].
+
+## 2.3 Provider Payload
 
 ```ipldsch
-type ReqPayload struct {
+type UploadResponse struct {
   sr [Link]  -- Incomplete subgraph roots
   bk Integer -- Bloom filter hash count
   bb Bytes   -- Bloom filter Binary
 }
 ```
-
-## 2.3 Provider Payload
-
-```ipldsch
-type ProvPayload struct {
-  bk Integer -- Bloom filter hash count
-  bb Bytes   -- Bloom filter Binary
-  pl CarFile -- Data payload
-} representation tuple
-```
-
-The data payload (`pl`) MUST be encoded as a [CARv1]. If the streaming flag was set in the URL, then the CAR MUST be a [streaming CARv1].
 
 ## 2.4 Provider Status Codes
 
