@@ -107,7 +107,18 @@ The protocol here is described in discrete rounds. When run over fully bidirecti
 
 ## 3.1 Phases
 
-![](./diagrams/phases.svg)
+```mermaid
+flowchart TD
+    S(Selection)
+    N(Narrowing)
+    T(Transmission)
+    G(Graph Status)
+    C(Cleanup)
+
+    S --> N --> T --> G --> C
+
+    G -..->|Next Round| N
+```
 
 ### 3.1.1 Selection
 
@@ -167,7 +178,25 @@ The Provider MAY garbage collect its session state when it has exhausted its gra
 
 ## 3.2.2 Individual Round Sequence Diagram
 
-![](./diagrams/pull.svg)
+```mermaid
+sequenceDiagram
+    participant Requestor Session Store
+    actor Requestor
+    actor Responder
+    participant Responder Session Store
+
+    Note over Requestor Session Store: May have data from previous round
+    Note over Responder Session Store: May have data from previous round
+
+    Requestor Session Store ->> Requestor Session Store: Walk local graph
+    Requestor Session Store ->> Requestor: Subgraph roots & updated Bloom
+    Requestor ->> Responder: (Bloom, CID roots)
+    Responder ->> Responder Session Store: Update
+    Responder Session Store ->> Responder Session Store: Walk local graph
+    Responder Session Store ->> Responder: Blocks
+    Responder ->> Requestor: CARv1
+    Requestor ->> Requestor Session Store: Update Sesson Bloom & CID Roots
+```
 
 ## 3.3 Push Protocol 📤
 
@@ -187,7 +216,25 @@ On the next round, the Requestor checks each block against the filter, and begin
 
 ## 3.3.2 Individual Round Sequence Diagram
 
-![](./diagrams/push.svg)
+```mermaid
+sequenceDiagram
+    participant Requestor Session Store
+    actor Requestor
+    actor Responder
+    participant Responder Session Store
+
+    Note over Requestor Session Store: May have data from previous round
+    Note over Responder Session Store: May have data from previous round
+
+    Requestor Session Store ->> Requestor Session Store: Walk local graph
+    Requestor Session Store ->> Requestor: Remaining blocks & latest Bloom
+    Requestor ->> Responder: (Bloom, CARv1)
+    Responder ->> Responder Session Store: Add blocks and check Bloom
+    Responder Session Store ->> Responder Session Store: Walk local graph
+    Responder Session Store ->> Responder: Updated Bloom & subgraph Roots
+    Responder ->> Requestor: (Bloom, Subgraph Roots)
+    Requestor ->> Requestor Session Store: Update Sesson Bloom & CID Roots
+```
 
 ## 3.4 Bloom Filter
 
