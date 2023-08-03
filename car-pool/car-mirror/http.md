@@ -85,10 +85,14 @@ This field MUST NOT be interpreted as a CID root being sent.
 ## 2.2 Requestor Payload
 
 ```ipldsch
-type PushRequest struct {
+type PushRequestHeader struct {
   bk Integer -- Bloom filter hash count
   bb Bytes   -- Bloom filter Binary
-  pl CARv1   -- Data payload
+}
+
+type PushRequest struct {
+  hd PushRequestHeader -- Nested (extensible) header map
+  pl CARv1             -- Data payload
 } representation tuple
 ```
 
