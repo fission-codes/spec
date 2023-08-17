@@ -1,5 +1,9 @@
 # Fission Specs
 
-This is the catch-all repository for Fission specifications. Many of these will be broken out into their own repositories over time.
+This is the catch-all repository for Fission specifications prior to moving to their own repos.
 
-1. [CAR Pool](./car-pool/README.md)
+## Alumni
+
+- [RhizomeDB](https://github.com/RhizomeDB)
+- [CAR Mirror](https://github.com/wnfs-wg/car-mirror)
+- [CAR Mirror over HTTP/2](https://github.com/wnfs-wg/car-mirror-http)
